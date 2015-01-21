@@ -8,42 +8,34 @@ Lemma cumulativity : forall e : env, forall t : typ, forall k k' : kind,
                        kinding e t k -> k <= k' -> kinding e t k'.
   intro e0. intro t. generalize e0 as e. clear e0. (* This is ugly *)
   induction t.
-  + {
-      intros.
+  - intros.
       simpl.
       simpl in H.
       remember (get_kind e n) as k1 in H |- *.
       destruct k1.
-      - split. apply H. destruct H. omega.
-      - apply H.
-    }
-  + {
-      intros.
-      simpl in H.
-      destruct H. destruct H. destruct H. destruct H1.
-      simpl.
-      specialize (IHt1 e x k' H1).
-      specialize (IHt2 e x0 k' H2).
-      exists k'. exists k'.
-      split. auto with arith. split.
-      apply IHt1. assert (x <= max x x0). auto with arith. omega.
-      apply IHt2. assert (x0 <= max x x0). auto with arith. omega.
-    }
-  + {
-      intros.
-      simpl.
-      simpl in H. destruct H. destruct H.
-      exists (k' - k0 + (max x k)). split.
-      apply (IHt (etvar k e) x). apply H.
-      assert (x <= max x k). auto with arith. omega.
-      assert (max x k >= k). auto with arith. assert (k' - k0 + max x k >= k). omega.
-      assert (max (k' - k0 + max x k) k = (k' - k0+ max x k)). auto with arith. rewrite H4.
-      rewrite -> H1. assert (S (k' - S (max x k) + max x k) = k' - S (max x k) + S (max x k)).
-      rewrite (plus_comm (k' - S (max x k)) (S (max x k))). rewrite le_plus_minus_r. omega.
-      omega.
-      rewrite -> H5. rewrite (plus_comm). rewrite le_plus_minus_r. trivial.
-      rewrite <- H1. apply H0.
-    }
+      + split. apply H. destruct H. omega.
+      + apply H.
+  - intros.
+    simpl in H.
+    do 3 destruct H. destruct H1.
+    simpl.
+    exists k'. exists k'.
+    split. auto with arith. split.
+    apply (IHt1 e x). trivial. assert (x <= max x x0). auto with arith. omega.
+    apply (IHt2 e x0). trivial. assert (x0 <= max x x0). auto with arith. omega.
+  - intros.
+    simpl.
+    do 2 destruct H.
+    exists (k' - k0 + (max x k)). split.
+    apply (IHt (etvar k e) x). apply H.
+    assert (x <= max x k). auto with arith. omega.
+    assert (max x k >= k). auto with arith. assert (k' - k0 + max x k >= k). omega.
+    assert (max (k' - k0 + max x k) k = (k' - k0+ max x k)). auto with arith. rewrite H4.
+    rewrite -> H1. assert (S (k' - S (max x k) + max x k) = k' - S (max x k) + S (max x k)).
+    rewrite (plus_comm (k' - S (max x k)) (S (max x k))). rewrite le_plus_minus_r. omega.
+    omega.
+    rewrite -> H5. rewrite (plus_comm). rewrite le_plus_minus_r. trivial.
+    rewrite <- H1. apply H0.
 Qed.
 
 Fixpoint insert_kind (v : nat) (e : env) (e' : env) : Prop :=
@@ -100,8 +92,8 @@ Lemma get_kind_fix_var : forall (v i : nat), forall (e : env),
   intros.
   unfold fix_var.
   destruct (le_gt_dec i v).
-  auto.
-  auto.
+  - auto.
+  - auto.
 Qed.
 
 Lemma get_kind_Sn : forall (e : env), forall (v : nat), get_kind e (S v) <> None -> get_kind e v <> None.
