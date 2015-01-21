@@ -1,8 +1,4 @@
 Require Import Arith.
-Require Import Arith.Max.
-Require Import Omega.
-Require Import Lt.
-Require Import Bool.
 
 Add LoadPath ".".
 Definition kind := nat.
@@ -92,9 +88,10 @@ Fixpoint get_kind (e : env) (i : nat) : option kind :=
     | empty => None
     | evar _ e' => get_kind e' i
     | etvar k e' =>
-      if beq_nat i 0
-      then Some k
-      else get_kind e' (i - 1)
+      match i with
+        | 0 => Some k
+        | S i' => get_kind e' i'
+      end
   end.
 
 Fixpoint get_typ (e : env) (i : nat) : option typ :=
@@ -102,9 +99,10 @@ Fixpoint get_typ (e : env) (i : nat) : option typ :=
     | empty => None
     | etvar _ e' => get_typ e' i
     | evar t e' =>
-      if beq_nat i 0
-      then Some t
-      else get_typ e' (i - 1)
+      match i with
+        | 0 => Some t
+        | S i' => get_typ e' i'
+      end
   end.
 
 Fixpoint bwf_typ (e : env) (t : typ) : bool :=
@@ -127,11 +125,23 @@ Fixpoint bwf_env (e : env) : bool :=
     | etvar k e => bwf_env e
   end.
 
-Definition wf_typ (e : env) (t : typ) : Prop :=
-  bwf_typ e t = true.
+Fixpoint wf_typ (e : env) (t : typ) : Prop :=
+  match t with
+    | tvar x =>
+      match get_kind e x with
+        | None => False
+        | Some _ => True
+      end
+    | tarr t1 t2 => wf_typ e t1 /\ wf_typ e t2
+    | tall k t2 => wf_typ (etvar k e) t2
+  end.
 
-Definition wf_env (e : env) : Prop :=
-  bwf_env e = true.
+Fixpoint wf_env (e : env) : Prop :=
+  match e with
+    | empty => True
+    | evar t e => wf_typ e t /\ wf_env e
+    | etvar k e => wf_env e
+  end.
 
 Fixpoint kinding (e : env) (t : typ) (k : kind) : Prop :=
   match t with

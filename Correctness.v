@@ -73,7 +73,7 @@ Theorem leq_prop : forall m n : nat, true = leq m n <-> m <= n.
   assert (m <= n). omega. apply IHm. apply H0.
 Qed.
 
-(* This is not required, but makes me happy *)
+(* This is actually cumulativity *)
 Lemma kinding_sub : forall t : typ, forall e : env, forall k1 k2 : kind,
                       k1 <= k2 -> kinding e t k1 -> kinding e t k2.
   intro.
