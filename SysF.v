@@ -114,7 +114,7 @@ Fixpoint bwf_typ (e : env) (t : typ) : bool :=
         | None => false
         | Some _ => true
       end
-    | tarr t1 t2 => (bwf_typ e t1 && bwf_typ e t2)%bool
+    | tarr t1 t2 => bwf_typ e t1 && bwf_typ e t2
     | tall k t2 => bwf_typ (etvar k e) t2
   end.
 
@@ -217,10 +217,8 @@ Fixpoint kind_of (e : env) (t : typ) : option kind :=
 Fixpoint beq_typ (t1 : typ) (t2 : typ) : bool :=
   match (t1, t2) with
     | (tvar x, tvar y) => beq_nat x y
-    | (tarr t1 t2, tarr t1' t2') =>
-      (beq_typ t1 t1' && beq_typ t2 t2')%bool
-    | (tall k t, tall k' t') =>
-      (beq_nat k k' && beq_typ t t')%bool
+    | (tarr t1 t2, tarr t1' t2') => beq_typ t1 t1' && beq_typ t2 t2'
+    | (tall k t, tall k' t') => beq_nat k k' && beq_typ t t'
     | _ => false
   end.
 
