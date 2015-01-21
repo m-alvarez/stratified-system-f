@@ -149,13 +149,57 @@ Lemma insert_kind_get_kind_n : forall (e e' : env), forall (v : nat),
   auto.
 Qed.
 
+Lemma fix_var_s : forall (v i : nat), fix_var (S v) (S i) = S (fix_var v i).
+  induction v.
+  - destruct i; [ simpl; compute; trivial .. ].
+  - destruct i.
+    + compute. trivial.
+    + specialize (IHv i).
+      unfold fix_var in IHv |- *.
+      remember (le_gt_dec (S i) (S v)).
+      remember (le_gt_dec (S (S i)) (S (S v))).
+      destruct s.
+      * destruct s0.
+        { reflexivity. }
+        { exfalso. omega. }
+      * destruct s0.
+        { exfalso. omega. }
+        { reflexivity. }
+Qed.
+
 Lemma insert_kind_get_kind : forall (e e' : env), forall (v : nat),
                                  insert_kind v e e' ->
-                                 forall (w : nat), get_kind e w <> None -> get_kind e' (fix_var w v) <> None.
-  intros.
-  apply get_kind_fix_var.
-  apply (insert_kind_get_kind_n e e' v). auto. auto.
-  apply (insert_kind_get_kind_Sn e e' v). auto. auto.
+                                 forall (w : nat), get_kind e w = get_kind e' (fix_var w v).
+  induction e.
+  - intros.
+    destruct e'.
+    + simpl. trivial.
+    + inversion H.
+    + simpl in H. destruct e'.
+      * rewrite -> H. simpl. auto.
+      * inversion H.
+      * inversion H.
+  - intros.
+    destruct e'.
+    + inversion H.
+    + simpl. apply IHe. apply H.
+    + inversion H.
+  - intros.
+    destruct e'.
+    + inversion H.
+    + inversion H.
+    + destruct v.
+      * simpl in H.
+        rewrite H.
+        unfold fix_var.
+        remember (le_gt_dec 0 w) as le0.
+        destruct le0.
+        { simpl. auto. }
+        { inversion g. }
+      * simpl in H.
+        destruct w.
+        { simpl. destruct H. rewrite H. reflexivity. }
+        { rewrite fix_var_s. simpl. apply IHe. apply H. }
 Qed.
 
 Lemma insert_kind_wf_typ : forall (t : typ), forall (e e' : env), forall (v : nat), insert_kind v e e' ->
@@ -170,7 +214,7 @@ Lemma insert_kind_wf_typ : forall (t : typ), forall (e e' : env), forall (v : na
       remember (get_kind e' (if le_gt_dec v n then S n else n)) in H1 |- *.
       destruct o.
       * trivial.
-      * apply H1. intro. inversion H2. auto.
+      * inversion H1.
     + inversion H0.
   - intros.
     simpl.
@@ -218,3 +262,75 @@ Theorem insert_kind_wf_env : forall (v : nat), forall (e e' : env), insert_kind 
       * simpl in H. rewrite <- H. simpl. apply H0.
       * simpl in H. simpl. apply (IHe v e'). apply H. apply H0.
 Qed.
+  
+Theorem insert_kind_kinding : forall (v : nat), forall (e e' : env), forall (t : typ), forall (k : kind),
+                                insert_kind v e e' -> kinding e t k -> kinding e' (tshift v t) k.
+  intros until t. generalize v, e, e'. clear v. clear e. clear e'.
+  induction t.
+  - intros.
+    simpl. simpl in H0.
+    Check insert_kind_get_kind.
+    assert ((if le_gt_dec v n then S n else n) = fix_var n v).
+    auto.
+    rewrite -> H1.
+    rewrite <- (insert_kind_get_kind e e' v H).
+    remember (get_kind e n) as k1.
+    destruct k1.
+    + split. apply (insert_kind_wf_env v e e'). apply H. apply H0. apply H0.
+    + apply H0.
+  - intros. simpl.
+    simpl in H0.
+    do 2 destruct H0.
+    exists x. exists x0.
+    split.
+    + apply H0.
+    + split.
+      * apply (IHt1 v e). apply H. apply H0.
+      * apply (IHt2 v e). apply H. apply H0.
+  - intros. simpl.
+    simpl in H0.
+    destruct H0.
+    exists x.
+    split.
+    + simpl. apply (IHt (S v) (etvar k e)). simpl. auto. apply H0.
+    + apply H0.
+Qed.
+
+Lemma insert_kind_get_typ : forall (e e' : env), forall (v : nat),
+                              insert_kind v e e' ->
+                              forall (w : nat),
+                                match get_typ e w with
+                                  | Some t => get_typ e' w = Some (tshift v t)
+                                  | None => True
+                                end.
+  induction e.
+  - intros.
+    simpl.
+    trivial.
+  - intros.
+    destruct e'.
+    + inversion H.
+    + simpl in H.
+      destruct w.
+        * simpl. symmetry. destruct H. congruence.
+        * simpl. apply IHe. apply H.
+    + inversion H.
+  - intros.
+    destruct e'.
+    + inversion H.
+    + inversion H.
+    + destruct v.
+      * simpl in H.
+        rewrite <- H.
+        remember (get_typ (etvar k e) w).
+        destruct o.
+        destruct w.
+        simpl.
+        simpl in Heqo.
+
+Theorem insert_kind_typing : forall (v : nat), forall (e e' : env), forall (t : term), forall (ty : typ),
+                               insert_kind v e e' -> typing e t ty -> typing e' t (tshift v ty).
+  intros until t. generalize v, e, e'. clear v. clear e. clear e'.
+  induction t.
+  - intros.
+    
