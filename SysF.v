@@ -161,6 +161,26 @@ Fixpoint kinding (e : env) (t : typ) (k : kind) : Prop :=
         k = S (max k' k1)
   end.
 
+Inductive kinding_ind : env -> typ -> kind -> Prop :=
+| k_tvar :
+    forall (e : env) (X : nat) (q : kind),
+      wf_env e ->
+      (match get_kind e X with
+         | Some p => (p <= q)
+         | None => False
+       end) ->
+      kinding_ind e (tvar X) q
+| k_tall :
+    forall (e : env) (T : typ) (p : kind) (q : kind),
+      kinding_ind (etvar q e) T p ->
+      kinding_ind e (tall q T) (S (max p q))
+| k_tarr :
+    forall (e : env) (T1 : typ) (T2 : typ) (p : kind) (q : kind),
+      kinding_ind e T1 p ->
+      kinding_ind e T2 q ->
+      kinding_ind e (tarr T1 T2) (max p q)
+.
+
 Fixpoint typing (e : env) (t : term) (ty : typ) : Prop :=
   match t with
     | var x =>
