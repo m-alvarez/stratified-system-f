@@ -158,24 +158,19 @@ Fixpoint kinding (e : env) (t : typ) (k : kind) : Prop :=
     | tall k1 t1 =>
       exists k' : kind,
         kinding (etvar k1 e) t1 k' /\
-        k = S (max k' k1)
+        k = S (max k1 k')
   end.
 
 Inductive kinding_ind : env -> typ -> kind -> Prop :=
-| k_tvar :
-    forall (e : env) (X : nat) (q : kind),
+| k_tvar (e : env) (X : nat) (p q : kind) :
       wf_env e ->
-      (match get_kind e X with
-         | Some p => (p <= q)
-         | None => False
-       end) ->
+      get_kind e X = Some p ->
+      p <= q ->
       kinding_ind e (tvar X) q
-| k_tall :
-    forall (e : env) (T : typ) (p : kind) (q : kind),
+| k_tall (e : env) (T : typ) (p q : kind) :
       kinding_ind (etvar q e) T p ->
       kinding_ind e (tall q T) (S (max p q))
-| k_tarr :
-    forall (e : env) (T1 : typ) (T2 : typ) (p : kind) (q : kind),
+| k_tarr (e : env) (T1 T2 : typ) (p q : kind) :
       kinding_ind e T1 p ->
       kinding_ind e T2 q ->
       kinding_ind e (tarr T1 T2) (max p q)
@@ -214,6 +209,26 @@ Fixpoint typing (e : env) (t : term) (ty : typ) : Prop :=
           ty = tsubst ty1 0 ty'
   end.
 
+Inductive typing_ind : env -> term -> typ -> Prop :=
+| t_var (e : env) (X : nat) (t : typ) :
+    get_typ e X = Some t ->
+    typing_ind e (var X) t
+| t_abs (e : env) (t t1 : typ) (T : term) :
+    typing_ind (evar t1 e) T t ->
+    typing_ind e (abs t1 T) (tarr t1 t)
+| t_app (e : env) (t t' : typ) (T1 : term) (T2 : term) :
+    typing_ind e T1 (tarr t t') ->
+    typing_ind e T2 t ->
+    typing_ind e (app T1 T2) t'
+| t_abs_t (e : env) (k : kind) (T : term) (t : typ) :
+    typing_ind (etvar k e) T t ->
+    typing_ind e (abs_t k T) (tall k t)
+| t_app_t (e : env) (k : kind) (T : term) (t1 t2 : typ) :
+    typing_ind e T (tall k t1) ->
+    kinding_ind e t2 k ->
+    typing_ind e (app_t T t2) (tsubst t1 0 t2)
+.
+            
 
 Fixpoint kind_of (e : env) (t : typ) : option kind :=
   match t with
@@ -230,7 +245,7 @@ Fixpoint kind_of (e : env) (t : typ) : option kind :=
     | tall k t' =>
       match kind_of (etvar k e) t' with
         | None => None
-        | Some k' => Some (S (max k k'))
+        | Some k' => Some (S (max k' k))
       end
   end.
 

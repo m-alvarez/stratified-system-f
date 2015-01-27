@@ -442,3 +442,14 @@ Theorem insert_kind_kinding_r : forall (i v : nat), forall (e e' : env), forall 
     + apply (IHt (S i) v (etvar k e)). simpl. split. trivial. apply H. apply H0.
     + apply H0.
 Qed.
+
+Theorem insert_kind_get_typ_r : forall (e e' : env), forall (i v : nat), forall (n : nat),
+                                  insert_kind_r i v e e' ->
+                                  match get_typ e n with
+                                    | Some t => get_typ e' (shift_var i n) = Some (tshift v t)
+                                    | None => True
+                                  end.
+  induction e.
+  - intros. simpl. trivial.
+  - intros. destruct e'. inversion H.
+    + specialize (IHe e' i v n). destruct H.
