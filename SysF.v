@@ -143,90 +143,40 @@ Fixpoint wf_env (e : env) : Prop :=
     | etvar k e => wf_env e
   end.
 
-Fixpoint kinding (e : env) (t : typ) (k : kind) : Prop :=
-  match t with
-    | tvar x =>
-      match get_kind e x with
-        | None => False
-        | Some k' => wf_env e /\ k' <= k
-      end
-    | tarr t1 t2 =>
-      exists k1 k2 : kind,
-        max k1 k2 = k /\
-        kinding e t1 k1 /\
-        kinding e t2 k2
-    | tall k1 t1 =>
-      exists k' : kind,
-        kinding (etvar k1 e) t1 k' /\
-        k = S (max k1 k')
-  end.
-
-Inductive kinding_ind : env -> typ -> kind -> Prop :=
+Inductive kinding : env -> typ -> kind -> Prop :=
 | k_tvar (e : env) (X : nat) (p q : kind) :
       wf_env e ->
       get_kind e X = Some p ->
       p <= q ->
-      kinding_ind e (tvar X) q
+      kinding e (tvar X) q
 | k_tall (e : env) (T : typ) (p q : kind) :
-      kinding_ind (etvar q e) T p ->
-      kinding_ind e (tall q T) (S (max p q))
+      kinding (etvar q e) T p ->
+      kinding e (tall q T) (S (max p q))
 | k_tarr (e : env) (T1 T2 : typ) (p q : kind) :
-      kinding_ind e T1 p ->
-      kinding_ind e T2 q ->
-      kinding_ind e (tarr T1 T2) (max p q)
+      kinding e T1 p ->
+      kinding e T2 q ->
+      kinding e (tarr T1 T2) (max p q)
 .
 
-Fixpoint typing (e : env) (t : term) (ty : typ) : Prop :=
-  match t with
-    | var x =>
-      match get_typ e x with
-        | None => False
-        | Some ty' => wf_env e /\ ty = ty'
-      end
-    | abs ty' t' =>
-      match ty with
-        | tarr ty1 ty2 =>
-          ty1 = ty' /\
-          typing (evar ty1 e) t' ty2
-        | _ => False
-      end
-    | app t1 t2 =>
-      exists ty2 : typ,
-        typing e t1 (tarr ty2 ty) /\
-        typing e t2 ty2
-    | abs_t k t' =>
-      match ty with
-        | tall k' ty' =>
-          k' = k /\
-          typing (etvar k e) t' ty'
-        | _ => False
-      end
-    | app_t t' ty' =>
-      exists l : kind,
-        exists ty1 : typ,
-          typing e t' (tall l ty1) /\
-          kinding e ty' l /\
-          ty = tsubst ty1 0 ty'
-  end.
-
-Inductive typing_ind : env -> term -> typ -> Prop :=
+Inductive typing : env -> term -> typ -> Prop :=
 | t_var (e : env) (X : nat) (t : typ) :
+    wf_env e ->
     get_typ e X = Some t ->
-    typing_ind e (var X) t
+    typing e (var X) t
 | t_abs (e : env) (t t1 : typ) (T : term) :
-    typing_ind (evar t1 e) T t ->
-    typing_ind e (abs t1 T) (tarr t1 t)
+    typing (evar t1 e) T t ->
+    typing e (abs t1 T) (tarr t1 t)
 | t_app (e : env) (t t' : typ) (T1 : term) (T2 : term) :
-    typing_ind e T1 (tarr t t') ->
-    typing_ind e T2 t ->
-    typing_ind e (app T1 T2) t'
+    typing e T1 (tarr t t') ->
+    typing e T2 t ->
+    typing e (app T1 T2) t'
 | t_abs_t (e : env) (k : kind) (T : term) (t : typ) :
-    typing_ind (etvar k e) T t ->
-    typing_ind e (abs_t k T) (tall k t)
+    typing (etvar k e) T t ->
+    typing e (abs_t k T) (tall k t)
 | t_app_t (e : env) (k : kind) (T : term) (t1 t2 : typ) :
-    typing_ind e T (tall k t1) ->
-    kinding_ind e t2 k ->
-    typing_ind e (app_t T t2) (tsubst t1 0 t2)
+    typing e T (tall k t1) ->
+    kinding e t2 k ->
+    typing e (app_t T t2) (tsubst t1 0 t2)
 .
             
 
