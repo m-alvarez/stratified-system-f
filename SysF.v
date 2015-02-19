@@ -1,6 +1,5 @@
 Require Import Arith.
 
-Add LoadPath ".".
 Definition kind := nat.
 
 Inductive typ :=
@@ -83,6 +82,12 @@ Inductive env : Set :=
 | etvar : kind -> env -> env
 .
 
+Definition fmap {A B : Type} (f : A -> B) (a : option A) :=
+  match a with
+    | None => None
+    | Some a => Some (f a)
+  end.
+
 Fixpoint get_kind (e : env) (i : nat) : option kind :=
   match e with
     | empty => None
@@ -97,7 +102,7 @@ Fixpoint get_kind (e : env) (i : nat) : option kind :=
 Fixpoint get_typ (e : env) (i : nat) : option typ :=
   match e with
     | empty => None
-    | etvar _ e' => get_typ e' i
+    | etvar _ e' => fmap (tshift 0) (get_typ e' i)
     | evar t e' =>
       match i with
         | 0 => Some t
@@ -127,11 +132,7 @@ Fixpoint bwf_env (e : env) : bool :=
 
 Fixpoint wf_typ (e : env) (t : typ) : Prop :=
   match t with
-    | tvar x =>
-      match get_kind e x with
-        | None => False
-        | Some _ => True
-      end
+    | tvar x => get_kind e x <> None
     | tarr t1 t2 => wf_typ e t1 /\ wf_typ e t2
     | tall k t2 => wf_typ (etvar k e) t2
   end.
@@ -164,6 +165,7 @@ Inductive typing : env -> term -> typ -> Prop :=
     get_typ e X = Some t ->
     typing e (var X) t
 | t_abs (e : env) (t t1 : typ) (T : term) :
+    wf_typ e t1 ->
     typing (evar t1 e) T t ->
     typing e (abs t1 T) (tarr t1 t)
 | t_app (e : env) (t t' : typ) (T1 : term) (T2 : term) :
@@ -179,7 +181,6 @@ Inductive typing : env -> term -> typ -> Prop :=
     typing e (app_t T t2) (tsubst t1 0 t2)
 .
             
-
 Fixpoint kind_of (e : env) (t : typ) : option kind :=
   match t with
     | tvar x => if bwf_env e then get_kind e x else None
@@ -219,7 +220,7 @@ Fixpoint type_of (e : env) (t : term) : option typ :=
     | var x => if bwf_env e then get_typ e x else None
     | abs ty t' =>
       match type_of (evar ty e) t' with
-        | Some ty1 => Some (tarr ty ty1)
+        | Some ty1 => if bwf_typ e ty then Some (tarr ty ty1) else None
         | None => None
       end
     | app t1 t2 =>
