@@ -80,23 +80,31 @@ Lemma bwf_typ_correct : forall t : typ, forall e : env, bwf_typ e t = true -> wf
   - intro. simpl.
     destruct (get_kind e n); [ intuition .. ]. discriminate.
   - intros.
-    (* TODO this looks like it could be shorter, but eauto doesn't work *)
     apply andb_true_iff in H.
     split.
-    * apply IHt1. apply H.
-    * apply IHt2. apply H.
+    + apply IHt1. apply H.
+    + apply IHt2. apply H.
   - intro. apply IHt.
 Qed.
+
+Lemma bwf_typ_complete : forall (t : typ) (e : env), wf_typ e t -> bwf_typ e t = true.
+  induction t; simpl; auto; intros.
+  - destruct (get_kind e n); auto.
+  - apply andb_true_iff. split; [apply IHt1 | apply IHt2]; destruct H; auto.
+Qed. 
     
 Lemma bwf_env_correct : forall e : env, bwf_env e = true -> wf_env e.
-  induction e.
-  - simpl. tauto.
+  induction e; simpl; auto.
   - intro.
     apply andb_true_iff in H.
     split.
-    * apply bwf_typ_correct. apply H.
-    * apply IHe. apply H.
-  - apply IHe.
+    + apply bwf_typ_correct. apply H.
+    + apply IHe. apply H.
+Qed.
+
+Lemma bwf_env_complete : forall e : env, wf_env e -> bwf_env e = true.
+  induction e; auto.
+  - intro. simpl. apply andb_true_iff. split; destruct H; auto using bwf_typ_complete.
 Qed.
 
 Theorem kind_of_correct (t : typ) : 

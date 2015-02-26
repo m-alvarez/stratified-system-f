@@ -1,7 +1,6 @@
 Add LoadPath ".".
 
 Require Import SysF.
-Require Import Metatheory.
 Require Import Relations.
 
 Inductive reduction : term -> term -> Prop :=
