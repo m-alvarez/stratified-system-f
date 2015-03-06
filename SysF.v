@@ -208,13 +208,6 @@ Fixpoint beq_typ (t1 : typ) (t2 : typ) : bool :=
     | _ => false
   end.
 
-Fixpoint leq (m : nat) (n : nat) :=
-  match (m, n) with
-    | (O, _) => true
-    | (S m', S n') => leq m' n'
-    | (S _, O) => false
-  end.
-
 Fixpoint type_of (e : env) (t : term) : option typ :=
   match t with
     | var x => if bwf_env e then get_typ e x else None
@@ -245,7 +238,7 @@ Fixpoint type_of (e : env) (t : term) : option typ :=
         | Some (tall k t') =>
           match kind_of e ty with
             | Some k' =>
-              if leq k' k
+              if leb k' k
               then Some (tsubst t' 0 ty)
               else None
             | None => None

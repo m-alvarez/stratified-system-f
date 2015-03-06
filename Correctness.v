@@ -1,5 +1,6 @@
 Require Import Arith.
 Require Import Arith.Max.
+Require Import Arith.Compare_dec.
 Require Import Omega.
 Require Import Lt.
 Require Import Bool.
@@ -38,14 +39,6 @@ Lemma beq_typ_refl : forall t : typ, beq_typ t t = true.
   - apply eq_sym. apply beq_nat_refl.
   - apply andb_true_iff. split. apply IHt1. apply IHt2.
   - apply andb_true_iff. split. symmetry. apply beq_nat_refl. apply IHt.
-Qed.
-
-Theorem leq_correct : forall m n : nat, leq m n = true -> m <= n.
-  induction m.
-  - auto with arith.
-  - intros. destruct n.
-    + inversion H.
-    + auto with arith.
 Qed.
 
 (* This is actually cumulativity *)
@@ -163,9 +156,9 @@ Theorem type_of_correct (t : term) :
       * inversion H.
       * inversion H.
       * destruct (kind_of e t0) eqn:kind_of_arg.
-        { destruct (leq k0 k) eqn:k0_leq_k.
+        { destruct (Arith.Compare_dec.leb k0 k) eqn:k0_leb.
           { inversion H. eapply t_app_t. eauto.
-            eauto using kind_of_correct, leq_correct, kinding_sub, t_app_t. }
+            eauto using kind_of_correct, leb_complete, kinding_sub, t_app_t. }
           { inversion H. } }
         { inversion H. }
     + inversion H.
