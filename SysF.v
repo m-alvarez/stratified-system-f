@@ -265,7 +265,7 @@ Fixpoint type_of (e : env) (t : term) : option typ :=
         | Some (tall K T') =>
           match kind_of e T with
             | Some K' =>
-              if leq K' K
+              if leb K' K
               then Some (tsubst T' 0 T)
               else None
             | None => None
