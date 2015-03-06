@@ -9,56 +9,56 @@ Add LoadPath ".".
 
 Require Import SysF.
 
-Lemma beq_typ_correct : forall t1 t2 : typ, beq_typ t1 t2 = true -> t1 = t2. 
-  induction t1.
+Lemma beq_typ_correct : forall T1 T2 : typ, beq_typ T1 T2 = true -> T1 = T2.
+  induction T1.
   - intros.
-    destruct t2; [ auto using beq_nat_eq | inversion H .. ].
+    destruct T2; [ auto using beq_nat_eq | inversion H .. ].
   - intros.
-    destruct t2.
+    destruct T2.
     + inversion H.
     + apply andb_true_iff in H. 
       destruct H.
-      apply IHt1_1 in H.
-      apply IHt1_2 in H0. 
+      apply IHT1_1 in H.
+      apply IHT1_2 in H0. 
       congruence.
     + inversion H.
   - intros.
-    destruct t2.
+    destruct T2.
     + inversion H.
     + inversion H.
     + apply andb_true_iff in H.
       destruct H.
-      apply IHt1 in H0.
+      apply IHT1 in H0.
       apply eq_sym in H. apply beq_nat_eq in H.
       congruence.
 Qed.
 
-Lemma beq_typ_refl : forall t : typ, beq_typ t t = true.
+Lemma beq_typ_refl : forall T : typ, beq_typ T T = true.
   intro.
-  induction t.
+  induction T.
   - apply eq_sym. apply beq_nat_refl.
-  - apply andb_true_iff. split. apply IHt1. apply IHt2.
-  - apply andb_true_iff. split. symmetry. apply beq_nat_refl. apply IHt.
+  - apply andb_true_iff. split. apply IHT1. apply IHT2.
+  - apply andb_true_iff. split. symmetry. apply beq_nat_refl. apply IHT.
 Qed.
 
 (* This is actually cumulativity *)
-Lemma kinding_sub : forall (e : env) (t : typ) (k : kind),
-                          kinding e t k -> forall k', k <= k' -> kinding e t k'.
+Lemma kinding_sub : forall (e : env) (T : typ) (K : kind),
+                          kinding e T K -> forall K', K <= K' -> kinding e T K'.
   do 4 intro.
   induction H.
   - intros.
-    assert (Kp <= k') by omega.
+    assert (Kp <= K') by omega.
     eauto using k_tvar.
   - intros.
-    destruct k'.
+    destruct K'.
     + inversion H0.
-    + assert (max Kp Kq <= k') by omega.
-      assert (max k' Kq = k') by eauto with arith.
+    + assert (max Kp Kq <= K') by omega.
+      assert (max K' Kq = K') by eauto with arith.
       rewrite <- H2.
       eauto using k_tall with arith.
   - intros.
     assert (Kp <= max Kp Kq /\ Kq <= max Kp Kq) by auto with arith.
-    assert (max k' k' = k') by auto with arith.
+    assert (max K' K' = K') by auto with arith.
     rewrite <- H3.
     destruct H2.
     apply k_tarr; [ eauto using le_trans .. ]. (* TODO just eauto using k_tarr, le_trans doesn't work *)
@@ -68,24 +68,24 @@ Definition cumulativity := kinding_sub.
 
 
 (* TODO simplified the equivalences to implications so this plays nice with eauto *)
-Lemma bwf_typ_correct : forall t : typ, forall e : env, bwf_typ e t = true -> wf_typ e t.
-  induction t.
+Lemma bwf_typ_correct : forall T : typ, forall e : env, bwf_typ e T = true -> wf_typ e T.
+  induction T.
   - intro. simpl.
     destruct (get_kind e n); [ intuition .. ]. discriminate.
   - intros.
     apply andb_true_iff in H.
     split.
-    + apply IHt1. apply H.
-    + apply IHt2. apply H.
-  - intro. apply IHt.
+    + apply IHT1. apply H.
+    + apply IHT2. apply H.
+  - intro. apply IHT.
 Qed.
 
-Lemma bwf_typ_complete : forall (t : typ) (e : env), wf_typ e t -> bwf_typ e t = true.
-  induction t; simpl; auto; intros.
+Lemma bwf_typ_complete : forall (T : typ) (e : env), wf_typ e T -> bwf_typ e T = true.
+  induction T; simpl; auto; intros.
   - destruct (get_kind e n); auto.
-  - apply andb_true_iff. split; [apply IHt1 | apply IHt2]; destruct H; auto.
+  - apply andb_true_iff. split; [apply IHT1 | apply IHT2]; destruct H; auto.
 Qed. 
-    
+
 Lemma bwf_env_correct : forall e : env, bwf_env e = true -> wf_env e.
   induction e; simpl; auto.
   - intro.
@@ -100,22 +100,22 @@ Lemma bwf_env_complete : forall e : env, wf_env e -> bwf_env e = true.
   - intro. simpl. apply andb_true_iff. split; destruct H; auto using bwf_typ_complete.
 Qed.
 
-Theorem kind_of_correct (t : typ) : 
-  forall (e : env) (k : kind), 
-    kind_of e t = Some k -> kinding e t k.
-  induction t.
+Theorem kind_of_correct (T : typ) : 
+  forall (e : env) (K : kind), 
+    kind_of e T = Some K -> kinding e T K.
+  induction T.
   - intros. simpl in H.
     remember (bwf_env e).
     destruct b.
     + apply eq_sym in Heqb. eauto using bwf_env_correct, k_tvar.
     + discriminate H.
   - intros. simpl in H.
-    remember (kind_of e t1) as kind_of_t1.
-    remember (kind_of e t2) as kind_of_t2.
-    destruct kind_of_t1, kind_of_t2;
+    remember (kind_of e T1) as kind_of_T1.
+    remember (kind_of e T2) as kind_of_T2.
+    destruct kind_of_T1, kind_of_T2;
       [ inversion H; eauto using k_tarr | inversion H .. ].
   - intros. simpl in H.
-    destruct (kind_of (etvar k e) t) eqn:kind_of_etvar.
+    destruct (kind_of (etvar k e) T) eqn:kind_of_etvar.
     + inversion H. eauto using k_tall.
     + inversion H.
 Qed. 

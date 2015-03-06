@@ -43,8 +43,8 @@ Section part_1.
     Qed.
     
     Theorem inversion_abs_t :
-      forall k t e T, ((abs_t k t) `in` [|T|]e) <->
-                      exists T2, T = tall k T2 /\ t `in` [|T2|](etvar k e).
+      forall K t e T, ((abs_t K t) `in` [|T|]e) <->
+                      exists T2, T = tall K T2 /\ t `in` [|T2|](etvar K e).
       split; intros.
       - inversion H. inversion H1. exists T0. split; auto. split; auto.
         + inversion H0. inversion H7. normalize.
@@ -55,8 +55,8 @@ Section part_1.
     
     Theorem inversion_app_t :
       forall t T' e T, ((app_t t T') `in` [|T|]e) <->
-                       exists T'' k, T = tsubst T'' 0 T' /\ kinding e T' k
-                                     /\ t `in` [|tall k T''|]e /\ neutral t.
+                       exists T'' K, T = tsubst T'' 0 T' /\ kinding e T' K
+                                     /\ t `in` [|tall K T''|]e /\ neutral t.
       split; intros.
       - inversion H. inversion H0. inversion H1. inversion H2. 
         exists T1. exists K. repeat split; auto. normalize.
@@ -69,11 +69,11 @@ End part_1.
 
 Section part_2.
   Inductive type_lt : env -> typ -> typ -> Prop :=
-  | order_arrow_l e t1 t2 : type_lt e t1 (tarr t1 t2)
-  | order_arrow_r e t1 t2 : type_lt e t2 (tarr t1 t2)
-  | order_arrow_all e u t k :
-      kinding e t k ->
-      type_lt e (tsubst u 0 t) (tall k u).
+  | order_arrow_l e T1 T2 : type_lt e T1 (tarr T1 T2)
+  | order_arrow_r e T1 T2 : type_lt e T2 (tarr T1 T2)
+  | order_arrow_all e U T K :
+      kinding e T K ->
+      type_lt e (tsubst U 0 T) (tall K U).
   
   Section Lexicographic_Product.
     Variable A : Type.
@@ -155,11 +155,11 @@ Section part_2.
     Qed.
   End Lexicographic_Product.
 
-  Fixpoint num_quantifiers_variables (t : typ) : nat :=
-    match t with
+  Fixpoint num_quantifiers_variables (T : typ) : nat :=
+    match T with
       | tvar _ => 1
-      | tarr t1 t2 => (num_quantifiers_variables t1) + (num_quantifiers_variables t2)
-      | tall _ t => 1 + (num_quantifiers_variables t)
+      | tarr T1 T2 => (num_quantifiers_variables T1) + (num_quantifiers_variables T2)
+      | tall _ T0 => 1 + (num_quantifiers_variables T0)
     end.
   
   Require Import Relation_Operators.
@@ -191,8 +191,8 @@ Section part_2.
   Qed.
   
   Definition pair_into_nats (p : env * typ) :=
-    let (e, t) := p in
-    existT (fun _ => nat) (kind_of e t) (num_quantifiers_variables t).
+    let (e, T) := p in
+    existT (fun _ => nat) (kind_of e T) (num_quantifiers_variables T).
 
   Definition order p q :=
     lexprod (option nat) (fun _ => nat) (lt_option) (fun _ => lt) 
@@ -207,8 +207,8 @@ Section part_2.
   Qed.
 
   Lemma num_quantifiers_variables_nonzero :
-    forall (t : typ), num_quantifiers_variables t > 0.
-    intro. induction t; simpl; auto with arith.
+    forall (T : typ), num_quantifiers_variables T > 0.
+    intro. induction T; simpl; auto with arith.
   Qed.
   
   (*

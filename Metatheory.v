@@ -5,14 +5,14 @@ Require Import Arith.
 Require Import Omega.
 
 Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
-| ik_top kind env :
-    insert_kind 0 kind env (etvar kind env)
-| ik_evar pos kind typ env env' :
-    insert_kind pos kind env env' ->
-    insert_kind pos kind (evar typ env) (evar (tshift pos typ) env')
-| ik_etvar pos kind k env env' :
-    insert_kind pos kind env env' ->
-    insert_kind (S pos) kind (etvar k env) (etvar k env')
+| ik_top K e :
+    insert_kind 0 K e (etvar K e)
+| ik_evar pos K T e e' :
+    insert_kind pos K e e' ->
+    insert_kind pos K (evar T e) (evar (tshift pos T) e')
+| ik_etvar pos K K' e e' :
+    insert_kind pos K e e' ->
+    insert_kind (S pos) K (etvar K' e) (etvar K' e')
 .
 
 Lemma shift_var_s : forall var shift,
@@ -117,7 +117,7 @@ Lemma insert_kind_get_typ :
   - destruct var. auto. apply IHinsert_kind.
   - simpl. rewrite <- IHinsert_kind. do 2 rewrite fmap_compose.
     assert (pos = pos + 0) by auto. rewrite H0. 
-    destruct (get_typ env var).
+    destruct (get_typ e var).
     + simpl. rewrite tshift_compose. auto.
     + auto.
 Qed.
@@ -187,12 +187,12 @@ Qed.
 Theorem insert_kind_typing :
   forall (e : env) (t : term) (T : typ),
     typing e t T ->
-    forall (e' : env) (pos : nat) (k : kind),
-      insert_kind pos k e e' -> typing e' (shift_typ pos t) (tshift pos T).
+    forall (e' : env) (pos : nat) (K : kind),
+      insert_kind pos K e e' -> typing e' (shift_typ pos t) (tshift pos T).
   do 4 intro. induction H; intros; simpl.
   - apply t_var. eapply insert_kind_wf_env. apply H1. apply H.
-    rewrite <- (insert_kind_get_typ pos e e' k). rewrite H0. auto. auto.
-  - apply t_abs. apply (insert_kind_wf_typ pos e e' T1 k). apply H1. apply H.
+    rewrite <- (insert_kind_get_typ pos e e' K). rewrite H0. auto. auto.
+  - apply t_abs. apply (insert_kind_wf_typ pos e e' T1 K). apply H1. apply H.
     eapply IHtyping, ik_evar, H1.
   - eapply t_app. eapply IHtyping1, H1. eapply IHtyping2, H1.
   - eapply t_abs_t. eapply IHtyping. eapply ik_etvar. apply H0.
@@ -229,8 +229,8 @@ Fixpoint remove_var (i : nat) (e : env) :=
   end.
 
 Lemma remove_var_evar :
-  forall (p : nat) (e : env) (t : typ),
-    evar t (remove_var p e) = remove_var (S p) (evar t e).
+  forall (p : nat) (e : env) (T : typ),
+    evar T (remove_var p e) = remove_var (S p) (evar T e).
   induction p; intros; auto.
 Qed.
 
@@ -242,28 +242,28 @@ Definition extends e1 e2 :=
   end.
 
 Lemma kind_extensionality_wf_typ :
-  forall (t : typ) (e e' : env),
+  forall (T : typ) (e e' : env),
     (forall p : nat, extends (get_kind e p) (get_kind e' p)) -> 
-    wf_typ e t -> wf_typ e' t.
-  induction t.
+    wf_typ e T -> wf_typ e' T.
+  induction T.
   - intros. simpl. unfold extends in H. specialize (H n).
     destruct (get_kind e' n); intro; try discriminate.
     simpl in H0. destruct (get_kind e n). inversion H. apply H0. auto.
   - intros. split.
-    + eapply IHt1. apply H. apply H0.
-    + eapply IHt2. apply H. apply H0.
+    + eapply IHT1. apply H. apply H0.
+    + eapply IHT2. apply H. apply H0.
   - intros. simpl. simpl in H0.
     assert (forall p : nat, extends (get_kind (etvar k e) p) (get_kind (etvar k e') p)).
-    destruct p; simpl; auto. unfold extends; trivial. eapply IHt; auto.
+    destruct p; simpl; auto. unfold extends; trivial. eapply IHT; auto.
 Qed.
 
 Lemma kind_extensionality_kinding :
-  forall (t : typ) (e : env) (k : kind),
-    kinding e t k ->
+  forall (T : typ) (e : env) (K : kind),
+    kinding e T K ->
     forall e',
       wf_env e' ->
       (forall p : nat, extends (get_kind e p) (get_kind e' p)) ->
-      kinding e' t k.
+      kinding e' T K.
   do 4 intro. induction H.
   - intros. specialize (H3 X). unfold extends in H3. rewrite H0 in H3.
     remember (get_kind e' X) as kind_e'_X. destruct kind_e'_X. 
@@ -293,8 +293,8 @@ Lemma remove_var_respects_kind_extensionality_weak :
 Qed.
 
 Lemma remove_var_wf_typ :
-  forall (e : env) (pos : nat) (t : typ),
-    wf_typ e t -> wf_typ (remove_var pos e) t.
+  forall (e : env) (pos : nat) (T : typ),
+    wf_typ e T -> wf_typ (remove_var pos e) T.
   intros.
   eapply kind_extensionality_wf_typ with (e' := (remove_var pos e)).
   apply remove_var_respects_kind_extensionality_weak.
@@ -314,18 +314,18 @@ Lemma remove_var_wf_env :
 Qed.
 
 Lemma subst_kind_wf_typ :
-  forall (T T' : typ) (e e' : env) (pos : nat) (k : kind),
-    insert_kind pos k e e' ->
+  forall (T T' : typ) (e e' : env) (pos : nat) (K : kind),
+    insert_kind pos K e e' ->
     wf_typ e' T -> 
     wf_typ e T' ->
     wf_typ e (tsubst T pos T').
   induction T; simpl; intros.
   - destruct (lt_eq_lt_dec n pos).
     + destruct s.
-      * simpl. rewrite (insert_kind_get_kind_2 pos k e e' H).
+      * simpl. rewrite (insert_kind_get_kind_2 pos K e e' H).
         destruct (le_gt_dec pos n). omega. apply H0.
       * apply H1.
-    + simpl. rewrite (insert_kind_get_kind_2 pos k e e' H).
+    + simpl. rewrite (insert_kind_get_kind_2 pos K e e' H).
       destruct (le_gt_dec pos (n - 1)).
       * assert (S (n - 1) = n) by omega. rewrite H2. auto.
       * omega.
@@ -337,8 +337,8 @@ Lemma subst_kind_wf_typ :
 Qed.
     
 Lemma add_var_wf_typ :
-  forall (e : env) (pos : nat) (t : typ),
-    wf_typ (remove_var pos e) t -> wf_typ e t.
+  forall (e : env) (pos : nat) (T : typ),
+    wf_typ (remove_var pos e) T -> wf_typ e T.
   intros.
   eapply kind_extensionality_wf_typ with (e := (remove_var pos e)).
   intro. apply equality_implies_extension. symmetry.
@@ -415,10 +415,10 @@ Lemma weak_extensionality_wf_typ :
 Qed.
 
 Lemma kind_weakening_wf_typ :
-  forall (T : typ) (e : env) (k : kind),
-    wf_typ e T -> wf_typ (etvar k e) T.
+  forall (T : typ) (e : env) (K : kind),
+    wf_typ e T -> wf_typ (etvar K e) T.
   intros.
-  apply (weak_extensionality_wf_typ T e (etvar k e)).
+  apply (weak_extensionality_wf_typ T e (etvar K e)).
   induction p; intros; simpl.
   - discriminate.
   - apply weakening_wf_typ_var. apply H0.
@@ -428,14 +428,14 @@ Qed.
 Lemma weakening_wf_typ :
   forall (T : typ) (e : env),
     wf_typ e T ->
-    forall (k : kind),
-      wf_typ (etvar k e) T.
+    forall (K : kind),
+      wf_typ (etvar K e) T.
   induction T; intros; simpl.
   - destruct n; simpl.
     + discriminate.
     + apply weakening_wf_typ_var. apply H.
   - split; [ apply IHT1, H | apply IHT2, H ].
-  - apply IHT. simpl in H. apply (weak_extensionality_wf_typ T (etvar k e) (etvar k0 e)).
+  - apply IHT. simpl in H. apply (weak_extensionality_wf_typ T (etvar k e) (etvar K e)).
     { intro. destruct p. discriminate. simpl. auto. }
     apply H.
 Qed.
@@ -470,8 +470,8 @@ Lemma get_typ_wf_typ :
 Qed.
 
 Lemma kinding_wf_typ :
-  forall (T : typ) (e : env) (k : kind),
-    kinding e T k -> wf_typ e T.
+  forall (T : typ) (e : env) (K : kind),
+    kinding e T K -> wf_typ e T.
   do 4 intro. induction H; simpl; intros.
   - intro. assert (Some Kp = None). transitivity (get_kind e X). auto. auto. discriminate.
   - apply IHkinding.
@@ -479,8 +479,8 @@ Lemma kinding_wf_typ :
 Qed.
 
 Lemma kinding_wf_env :
-  forall (T : typ) (e : env) (k : kind),
-    kinding e T k -> wf_env e.
+  forall (T : typ) (e : env) (K : kind),
+    kinding e T K -> wf_env e.
   do 4 intro. induction H; simpl; intros; auto.
 Qed.
 
@@ -498,12 +498,12 @@ Lemma typing_wf_typ :
 Qed.
 
 Lemma kinding_extensionality :
-  forall (T : typ) (k : kind) (e : env),
-    kinding e T k ->
+  forall (T : typ) (K : kind) (e : env),
+    kinding e T K ->
     forall (e' : env),
       (forall p, extends (get_kind e p) (get_kind e' p)) ->
       wf_env e' ->
-      kinding e' T k.
+      kinding e' T K.
   do 4 intro. induction H; intros; simpl.
   - pose H2. specialize (e0 X).
     unfold extends in e0. remember (get_kind e X) as kind_e_X. destruct kind_e_X; simpl.
@@ -637,7 +637,7 @@ Theorem wf_typ_kinding :
   forall (T : typ) (e : env),
     wf_env e ->
     wf_typ e T ->
-    exists (k : kind), kinding e T k.
+    exists (K : kind), kinding e T K.
   induction T; simpl; intros.
   - remember (get_kind e n) as o. destruct o.
     + idtac. exists k. eapply k_tvar. apply H. symmetry. apply Heqo. auto.
@@ -650,15 +650,15 @@ Qed.
 Theorem regularity :
   forall (e : env) (t : term) (T : typ),
     typing e t T ->
-    exists (k : kind), kinding e T k.
+    exists (K : kind), kinding e T K.
   intros. apply wf_typ_kinding; eauto using typing_wf_env, typing_wf_typ.
 Qed.
 
 Lemma replace_kind_respects_kind_extensionality :
-  forall (e e' e'' : env) (k' k'' : kind) (pos : nat),
-    k'' <= k' ->
-    insert_kind pos k' e e' ->
-    insert_kind pos k'' e e'' ->
+  forall (e e' e'' : env) (K' K'' : kind) (pos : nat),
+    K'' <= K' ->
+    insert_kind pos K' e e' ->
+    insert_kind pos K'' e e'' ->
     (forall (p : nat), extends (get_kind e' p) (get_kind e'' p)).
   intros.
   { destruct (gt_eq_gt_dec pos p). destruct s.
@@ -677,10 +677,10 @@ Qed.
 
 Lemma replace_kind_wf_typ :
   forall (T : typ),
-  forall (e e' e'' : env) (k' k'' : kind) (pos : nat),
-    k'' <= k' ->
-    insert_kind pos k' e e' ->
-    insert_kind pos k'' e e'' ->
+  forall (e e' e'' : env) (K' K'' : kind) (pos : nat),
+    K'' <= K' ->
+    insert_kind pos K' e e' ->
+    insert_kind pos K'' e e'' ->
     wf_typ e' T ->
     wf_typ e'' T.
   intros.
@@ -690,17 +690,17 @@ Lemma replace_kind_wf_typ :
 Qed.
 
 Lemma insert_kind_swap :
-  forall (e : env) (T : typ) (k: kind),
-    insert_kind 0 k (evar T e) (etvar k (evar T e)) ->
-    insert_kind 0 k (evar T e) (evar (tshift 0 T) (etvar k e)).
+  forall (e : env) (T : typ) (K: kind),
+    insert_kind 0 K (evar T e) (etvar K (evar T e)) ->
+    insert_kind 0 K (evar T e) (evar (tshift 0 T) (etvar K e)).
   intros. apply ik_evar. apply ik_top.
 Qed.
 
 Lemma replace_kind_wf_env :
   forall (e : env),
-    forall (e'' e' : env) (k'' k' : kind) (pos : nat),
-      insert_kind pos k'' e e'' /\ insert_kind pos k' e e' ->
-      k'' <= k' ->
+    forall (e'' e' : env) (K'' K' : kind) (pos : nat),
+      insert_kind pos K'' e e'' /\ insert_kind pos K' e e' ->
+      K'' <= K' ->
       wf_env e' ->
       wf_env e''.
   induction e.
@@ -713,38 +713,38 @@ Lemma replace_kind_wf_env :
       * simpl. rewrite <- H5 in H1. rewrite Heqe0. rewrite <- Heqe1. apply H1.
       * simpl. rewrite <- H5 in *. rewrite Heqe0. rewrite <- Heqe1.
         rewrite <- H6 in H1. split.
-        { clear H5 e0 H4 kind0 H3 pos. rewrite <- H6 in H2. inversion H2.
-          clear H4 pos H9 env'0 H5 kind0 H8 env1 H3 typ0.
-          inversion Heqe1. rewrite -> H5 in *. clear H5 env0. rewrite -> H4 in *.
-          clear H4 typ. clear H6 e'. clear H. clear Heqe0. clear Heqe1.
+        { clear H5 e1 H4 K0 H3 pos. rewrite <- H6 in H2. inversion H2.
+          clear H4 pos H9 e'1 H5 K0 H8 e1 H3 T0.
+          inversion Heqe1. rewrite -> H5 in *. clear H5 e2. rewrite -> H4 in *.
+          clear H4 T. clear H6 e'. clear H. clear Heqe0. clear Heqe1.
           destruct H1. eapply remove_kind_wf_typ. 
           apply H7. apply H. }
-        { inversion Heqe1. rewrite H9, H8 in *. clear H3 H4 H8 H9. clear H5 e0.
-          eapply (IHe (etvar kind e)). split; auto.
+        { inversion Heqe1. rewrite H9, H8 in *. clear H3 H4 H8 H9. clear H5 e2.
+          eapply (IHe (etvar K e)). split; auto.
           { eapply ik_top. } { rewrite <- H6 in H2. inversion H2. apply H7. }
           auto. apply H1. }
     + split. 
       * eapply insert_kind_wf_typ. apply H. inversion Heqe0.
         rewrite H5 in *.
-        clear H4 H5 Heqe0 typ env.
+        clear H4 H5 Heqe0 T e0.
         remember (evar t e) in H2. inversion H2; simpl; auto; try discriminate.
-        { rewrite <- H3 in *. clear H3 pos. clear H4 kind0. clear H5. rewrite <- H6 in *.
+        { rewrite <- H3 in *. clear H3 pos. clear H4 K0. clear H5. rewrite <- H6 in *.
           rewrite Heqe0 in H1. apply H1. }
         { rewrite <- H7 in H1. destruct H1. rewrite Heqe0 in *. clear Heqe0 e0.
-          rewrite <- H7 in *. clear H7 e'. inversion H6. rewrite H9 in *. clear H9 typ.
-          rewrite H10 in *. clear H10 env. clear H4 pos0. clear H5 kind0. clear H6.
+          rewrite <- H7 in *. clear H7 e'. inversion H6. rewrite H9 in *. clear H9 T.
+          rewrite H10 in *. clear H10 e1. clear H4 pos0. clear H5 K0. clear H6.
           eapply remove_kind_wf_typ. apply H3. apply H1. }
         { rewrite <- H6 in *. discriminate. } 
       * remember (evar t e) in H2. inversion H2; simpl; auto; try discriminate. 
-        { clear H5 env0. clear H4 kind0. rewrite <- H3 in *. clear pos H3.
+        { clear H5 e2. clear H4 K0. rewrite <- H3 in *. clear pos H3.
           rewrite <- H6 in *. clear H6 e'. 
-          inversion Heqe0. rewrite H5 in *. clear H5 env Heqe0. clear H4.
-          rewrite Heqe1 in *. clear Heqe1 e0. clear IHinsert_kind.
-          eapply ik_evar with (typ := t) in H.
+          inversion Heqe0. rewrite H5 in *. clear H5 e0 Heqe0. clear H4.
+          rewrite Heqe1 in *. clear Heqe1 e1. clear IHinsert_kind.
+          eapply ik_evar with (T := t) in H.
           eapply IHe. split. inversion H. apply H6. apply ik_top. apply H0. apply H1. }
-        { rewrite Heqe1 in *. clear Heqe1 e0. inversion Heqe0. rewrite H10 in *.
-          clear Heqe0 H9 H10 typ env. clear H4 pos0. clear H5 kind0. inversion H6.
-          rewrite H5 in *. clear H5 typ0. rewrite H8 in *. clear H8 env0. clear H6.
+        { rewrite Heqe1 in *. clear Heqe1 e1. inversion Heqe0. rewrite H10 in *.
+          clear Heqe0 H9 H10 T e0. clear H4 pos0. clear H5 K0. inversion H6.
+          rewrite H5 in *. clear H5 T0. rewrite H8 in *. clear H8 e2. clear H6.
           rewrite <- H7 in *. clear H7 e'. eapply IHe. split.
           { apply H. } { apply H3. } { apply H0. } { apply H1. } }
         { rewrite <- H6 in *. discriminate. }
@@ -752,16 +752,16 @@ Lemma replace_kind_wf_env :
     inversion H.
     + rewrite <- H3 in *. rewrite Heqe0 in *. rewrite <- H6 in *. inversion H2.
       rewrite <- H10 in H2. simpl. 
-      eapply (IHe (etvar k'' e)). split. apply ik_top. apply ik_top.
+      eapply (IHe (etvar K'' e)). split. apply ik_top. apply ik_top.
       apply H0. rewrite <- H10 in H1. apply H1.
     + rewrite <- H6 in Heqe0. inversion Heqe0.
     + rewrite <- H6 in Heqe0. inversion Heqe0. 
       (* As I write this, it's 6:30 AM and I haven't slept *)
       (* This can probably be done in a much shorter way. *)
-      rewrite H9, H10 in *. clear H9 H10 H5 k0 env kind.
+      rewrite H9, H10 in *. clear H9 H10 H5 K'0 e1 K.
       rewrite <- H6, <- H7 in *. clear H6 H7 e0 e''. clear Heqe0. rewrite <- H4 in *.
       clear H4 pos. remember (etvar k e) in H2.
-      inversion H2. rewrite <- H7 in *. clear H7 e0. clear H6 kind. clear H5 pos.
+      inversion H2. rewrite <- H7 in *. clear H7 e0. clear H6 K. clear H5 pos.
       rewrite <- H8 in *. clear H8 e'. inversion Heqe0. 
       rewrite <- H7, <- H8 in *. clear H7 H8 e0 e'. rewrite <- H4 in *. clear H4 pos0.
       clear H6. simpl. eapply IHe. split. apply H3. inversion Heqe0. rewrite H7 in *.
@@ -772,10 +772,10 @@ Qed.
 Theorem narrowing :
   forall (e' : env) (t : term) (T : typ),
     typing e' t T ->
-    forall (pos : nat) (e e'' : env) (k' k'' : kind),
-    insert_kind pos k' e e' ->
-    insert_kind pos k'' e e'' ->
-    k'' <= k' ->
+    forall (pos : nat) (e e'' : env) (K' K'' : kind),
+    insert_kind pos K' e e' ->
+    insert_kind pos K'' e e'' ->
+    K'' <= K' ->
     typing e'' t T.
   intros.
   eapply typing_extensionality. apply H.
