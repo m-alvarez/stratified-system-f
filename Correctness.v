@@ -47,17 +47,17 @@ Lemma kinding_sub : forall (e : env) (t : typ) (k : kind),
   do 4 intro.
   induction H.
   - intros.
-    assert (p <= k') by omega.
+    assert (Kp <= k') by omega.
     eauto using k_tvar.
   - intros.
     destruct k'.
     + inversion H0.
-    + assert (max p q <= k') by omega.
-      assert (max k' q = k') by eauto with arith.
+    + assert (max Kp Kq <= k') by omega.
+      assert (max k' Kq = k') by eauto with arith.
       rewrite <- H2.
       eauto using k_tall with arith.
   - intros.
-    assert (p <= max p q /\ q <= max p q) by auto with arith.
+    assert (Kp <= max Kp Kq /\ Kq <= max Kp Kq) by auto with arith.
     assert (max k' k' = k') by auto with arith.
     rewrite <- H3.
     destruct H2.

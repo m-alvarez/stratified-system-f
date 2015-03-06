@@ -192,7 +192,7 @@ Theorem insert_kind_typing :
   do 4 intro. induction H; intros; simpl.
   - apply t_var. eapply insert_kind_wf_env. apply H1. apply H.
     rewrite <- (insert_kind_get_typ pos e e' k). rewrite H0. auto. auto.
-  - apply t_abs. apply (insert_kind_wf_typ pos e e' t1 k). apply H1. apply H.
+  - apply t_abs. apply (insert_kind_wf_typ pos e e' T1 k). apply H1. apply H.
     eapply IHtyping, ik_evar, H1.
   - eapply t_app. eapply IHtyping1, H1. eapply IHtyping2, H1.
   - eapply t_abs_t. eapply IHtyping. eapply ik_etvar. apply H0.
@@ -267,8 +267,8 @@ Lemma kind_extensionality_kinding :
   do 4 intro. induction H.
   - intros. specialize (H3 X). unfold extends in H3. rewrite H0 in H3.
     remember (get_kind e' X) as kind_e'_X. destruct kind_e'_X. 
-    apply k_tvar with (p := k); auto; try omega. inversion H3.
-  - intros. eapply k_tall. apply IHkinding. auto. intros. destruct p0.
+    apply k_tvar with (Kp := k); auto; try omega. inversion H3.
+  - intros. eapply k_tall. apply IHkinding. auto. intros. destruct p.
     + simpl. unfold extends. auto.
     + simpl. apply H1.
   - intros. apply k_tarr. apply IHkinding1. apply H1. apply H2. apply IHkinding2.
@@ -473,7 +473,7 @@ Lemma kinding_wf_typ :
   forall (T : typ) (e : env) (k : kind),
     kinding e T k -> wf_typ e T.
   do 4 intro. induction H; simpl; intros.
-  - intro. assert (Some p = None). transitivity (get_kind e X). auto. auto. discriminate.
+  - intro. assert (Some Kp = None). transitivity (get_kind e X). auto. auto. discriminate.
   - apply IHkinding.
   - split. { apply IHkinding1. } { apply IHkinding2. }
 Qed.
@@ -489,7 +489,7 @@ Lemma typing_wf_typ :
     typing e t T -> wf_typ e T.
   do 4 intro. induction H.
   - pose (get_typ_wf_typ e H X). rewrite H0 in y. apply y.
-  - split. apply H. apply (kind_extensionality_wf_typ t (evar t1 e)); auto.
+  - split. apply H. apply (kind_extensionality_wf_typ T2 (evar T1 e)); auto.
     intro. unfold extends. simpl. destruct (get_kind e p); auto.
   - apply IHtyping1.
   - apply IHtyping.
@@ -508,10 +508,10 @@ Lemma kinding_extensionality :
   - pose H2. specialize (e0 X).
     unfold extends in e0. remember (get_kind e X) as kind_e_X. destruct kind_e_X; simpl.
     + remember (get_kind e' X) as kind_e'_X. destruct kind_e'_X; try omega. 
-      apply k_tvar with (p := k0); auto. inversion H0. omega.
+      apply k_tvar with (Kp := k0); auto. inversion H0. omega.
     + discriminate.
   - eapply k_tall. apply IHkinding. intro. 
-    destruct p0. { simpl. unfold extends. auto. } { simpl. apply H0. }
+    destruct p. { simpl. unfold extends. auto. } { simpl. apply H0. }
     apply H1.
   - apply k_tarr.
     { apply IHkinding1. apply H1. apply H2. }
@@ -607,7 +607,7 @@ Lemma subst_preserves_typing :
       * eapply t_var. apply remove_var_wf_env. apply H.
         rewrite <- H0. symmetry.
         apply remove_var_get_typ_lt. apply l.
-      * assert (t = W). symmetry in H2. rewrite e0 in H0.
+      * assert (T = W). symmetry in H2. rewrite e0 in H0.
         apply (eq_trans H2) in H0. inversion H0. auto. rewrite <- H3 in H1. auto.
     + intro. eapply t_var. apply remove_var_wf_env. apply H.
       rewrite <- H0. symmetry. apply remove_var_get_typ_gt. apply l.
@@ -623,7 +623,7 @@ Lemma subst_preserves_typing :
     eapply IHtyping. 
     eapply (insert_kind_typing (remove_var x e) u). apply H0.
     apply ik_top.
-    rewrite <- (insert_kind_get_typ 0 e (etvar k e) k). rewrite H1. auto.
+    rewrite <- (insert_kind_get_typ 0 e (etvar K e) K). rewrite H1. auto.
     apply ik_top.
   - eapply t_app_t. eapply IHtyping. apply H1. apply H2.
     eapply kinding_extensionality. apply H0.
