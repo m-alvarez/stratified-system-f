@@ -23,7 +23,7 @@ Section part_1.
       forall t1 t2 e T, ((app t1 t2) `in` [|T|]e) <->
                         exists T', t1 `in` [|tarr T' T|]e /\ t2 `in` [|T'|]e /\ neutral t1.
       split; intros.
-      - inversion H. inversion H1. inversion H0. inversion H8. exists t. split.
+      - inversion H. inversion H1. inversion H0. inversion H8. exists T1. split.
         + split. normalize. auto.
         + do 2 (split; auto).
       - do 2 destruct H. inversion H. inversion H0. inversion H3. split.
@@ -35,7 +35,7 @@ Section part_1.
       forall T1 t e T, ((abs T1 t) `in` [|T|]e) <->
                        exists T2, T = tarr T1 T2 /\ t `in` [|T2|](evar T1 e).
       split; intros.
-      - inversion H. inversion H1. exists t0. split; auto. split; auto.
+      - inversion H. inversion H1. exists T2. split; auto. split; auto.
         + inversion H0. inversion H8. auto.
       - do 2 destruct H. inversion H0. split.
         + normalize.
@@ -46,7 +46,7 @@ Section part_1.
       forall k t e T, ((abs_t k t) `in` [|T|]e) <->
                       exists T2, T = tall k T2 /\ t `in` [|T2|](etvar k e).
       split; intros.
-      - inversion H. inversion H1. exists t0. split; auto. split; auto.
+      - inversion H. inversion H1. exists T0. split; auto. split; auto.
         + inversion H0. inversion H7. normalize.
       - do 2 destruct H. inversion H0. split.
         + normalize.
@@ -59,12 +59,12 @@ Section part_1.
                                      /\ t `in` [|tall k T''|]e /\ neutral t.
       split; intros.
       - inversion H. inversion H0. inversion H1. inversion H2. 
-        exists t1. exists k. repeat split; auto. normalize.
+        exists T1. exists K. repeat split; auto. normalize.
       - do 3 destruct H. destruct H0. destruct H1. inversion H1. split.
         + normalize.
         + rewrite H. eapply t_app_t; eauto.
-    Qed.  
-
+    Qed. 
+ 
 End part_1.
 
 Section part_2.
