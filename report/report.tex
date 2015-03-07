@@ -109,7 +109,8 @@ several distinct files that group altogether related code. We thus
 provide :
 
 \begin{itemize}
-  \item \verb|SysF.v| for part \emph{I.1.2 Definitions} ;
+  \item \verb|SysF.v| and \verb|Correctness.v| for part \emph{I.1.2
+    Definitions} ;
   \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
   \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
     Terms} ;
@@ -117,21 +118,47 @@ provide :
     part \emph{II.1 Strong Normalization}.
 \end{itemize}
 
+We provide compilation rules for each distinct file, which helps
+for sanity check. That is, running \verb|make| will compile all files
+respecting the dependencies order, and thus fail if anything is wrong
+within the whole project.
+
 Since every other file depends on the definitions in \verb|SysF.v|,
 using any of these files requires having compiled \verb|SysF.v|
-first. This may be done using \verb|make SysF.vo|. We actually provide
-compilation rules for each distinct file, which helps for sanity
-check. That is, running \verb|make| will compile all files
-(\verb|SysF.v| first) and thus fail if anything is wrong within the
-whole project.
+first. This may be done using \verb|make SysF.vo|. Also,
+\verb|StrongNormalization.v| relies on the whole definitions, it is
+thus recommended to have run \verb|make| once before trying to execute
+it.
 
 \subsection{Definitions}
 
+[...]
+
+We also define a structural decidable egality predicate over types
+\verb|beq_typ : typ -> typ -> bool|. We need it for example in
+\verb|type_of : env -> term -> option typ|, where we need to test for
+equality in a conditional statement. This can't be done using
+the usual equality \verb|eq|, whose result is in \verb|Prop|.
+
+Of course, like in the exam with the structural decidable equality over
+Polynomials, this calls for the addition of some lemmas talking about
+\verb|beq_typ| if we want to prove any interesting property about a
+function that uses it. In particular, in \verb|Correctness.v| we
+define two lemma that state that \verb|beq_typ| is correct and
+reflexive.
+
 \subsection{Basic Metatheory}
+
+[...]
 
 \subsection{Reduction and Normal Terms}
 
+[...]
+
 \subsection{Strong Normalization}
+
+[...]
+
 
 \section{Design Choices}
 
@@ -141,6 +168,8 @@ section, we explain our choices and the reasons why we made them.
 \subsection{Indexes for Kind and Type Variables}
 
 We chose to index variables by separating types and kind variables.
+
+[...]
 
 \subsection{Kinding and Typing predicates}
 
