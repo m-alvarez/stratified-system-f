@@ -120,13 +120,13 @@ provide :
 
 We provide compilation rules for each distinct file, which helps
 for sanity check. That is, running \verb|make| will compile all files
-respecting the dependencies order, and thus fail if anything is wrong
-within the whole project.
+respecting the order of dependencies, and thus fail if anything is
+wrong within the whole project.
 
 Since every other file depends on the definitions in \verb|SysF.v|,
 using any of these files requires having compiled \verb|SysF.v|
 first. This may be done using \verb|make SysF.vo|. Also,
-\verb|StrongNormalization.v| relies on the whole definitions, it is
+\verb|StrongNormalization.v| relies on the whole formalization, it is
 thus recommended to have run \verb|make| once before trying to execute
 it.
 
@@ -154,7 +154,7 @@ Of course, like in the exam with the structural decidable equality over
 polynomials, this calls for the addition of some lemmas talking about
 \verb|beq_typ| if we want to prove any interesting property about a
 function that uses it. In particular, in \verb|Correctness.v| we
-define two lemma that state that \verb|beq_typ| is correct and
+define two lemmas that state that \verb|beq_typ| is correct and
 reflexive.
 
 \subsection{Basic Metatheory}
