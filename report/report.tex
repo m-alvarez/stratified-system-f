@@ -22,6 +22,63 @@
 %% what was difficult and why, what ingredient or what method worked
 %% well, did you use/lack of some automation tools...
 
+%% ===== Basis for the report =====
+
+%% - First, an important note: the file structure of the code.
+%% - The choice of indexing variables: types and kinds are numbered
+%%   separately, etcetera. Why we chose it.
+%% - We started defining typing and kinding as Fixpoints instead of
+%%   Inductive predicates. This made everything really hard!
+%% - Equality for types: it's not enough to have =, we needed beq_typ
+%%   because you can't use = in if...then...else... (and this is necessary for
+%%   type_of, for example). This means we also needed some lemmas (like the ones
+%%   in the exam!) showing correctness (but not completeness!) for this
+%%   equality, beq_typ
+%% - We got the wrong definition for insert_kind. This was extremely
+%%   painful, because we got it wrong in subtle ways so many theorems were still
+%%   true, but not all, and it took us a while to realize that it was wrong. You
+%%   should probably check the Git logs to see the previous version. The proofs
+%%   were HUGE and very different. This is very interesting: things like "does
+%%   this type have a kind?" were based in "*how many* free variables does it
+%%   have?" and "*how many* kinds are in the environment?" This is
+%%   interesting. The new way of doing this is through some "extensionality"
+%%   lemmas that say that "the kind of a type only depends on the kinds in the
+%%   environment". Take a look at these and understand how powerful they are!
+%%   Same for typing, but typing extensionality is more complex! Again, read the
+%%   code, understand the lemmas. Maybe it's interesting if you go backwards:
+%%   look at the final theorems (the ones that are required by the exercise) and
+%%   see how I defined lemmas in order to prove the required stuff!
+%% - Reduction.v is very interesting because I started doing advanced
+%%   stuff: you have examples of notations and tactics. It's worth mentioning
+%%   the tactics (they are easy to understand) and how they make the congruence
+%%   lemmas very easy to prove.
+%% - Also, please, if you could format the files nicely and group related
+%%   stuff together and put comments, that would be nice. If not, just add a
+%%   header to each file saying "this file contains this and that, for this
+%%   exercise".
+%% - StrongNormalization.v is incomplete...and is never going to be
+%%   completed. The incomplete code is in the comments.
+%% - Some cool tactics and stuff:
+%% > - *eauto, eapply, erewrite* - they usually avoid uses of 'specialize'
+%% > - *pose* - good when you want to take a lemma from the outside and put
+%% >   it in your proof
+%% > - *auto/eauto with arith, auto/eauto using [lemma_1, lemma_2...]* -
+%% >   good for when the proof is trivial but you need to remember a few lemmas
+%% >   that are defined outside. It avoids you having to pose the lemmas.
+%% > - The tactic language: *destruct; someTactic.* will apply someTactic
+%% >   to all branches of the destruct/case/induction in parallel! This saves a
+%% >   lot of inductions followed by intros in every branch or stuff like that.
+%% > - *try* allows you to apply a tactic and, if it doesn't work, it's ok.
+%% >   this is good because some tactics like omega or discriminate will fail if
+%% >   they don't work! you can't just tell coq "use omega everywhere and only ask
+%% >   me to prove the cases where it doesn't work", because if it doesn't work it
+%% >   will raise an error. Instead, "use *try omega *everywhere". Instead of
+%% >   failing, it will let you continue the proof.
+%% > - *discriminate/try discriminate* - it's good when you have a case
+%% >   analysis but some cases are impossible - like if you know some term CAN'T
+%% >   be a variable. Discriminate will take care of those cases.
+%% >
+%% >
 
 % We may want to use this if we get more than 5 pages
 %\usepackage[a4paper,includeheadfoot,margin=2.4cm,footskip=.5cm]{geometry}
@@ -39,7 +96,5 @@
 \author{M. Alvarez and Y. Juglaret}
 \date{}
 \maketitle
-
-
 
 \end{document}
