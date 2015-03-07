@@ -111,7 +111,7 @@ Definition fmap {A B : Type} (f : A -> B) (a : option A) :=
     | Some a => Some (f a)
   end.
 
-(** [get_kind e i] returns the [i]-th kind in environment [e],x if it
+(** [get_kind e i] returns the [i]-th kind in environment [e], if it
     exists. *)
 Fixpoint get_kind (e : env) (i : nat) : option kind :=
   match e with
