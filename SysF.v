@@ -1,10 +1,19 @@
 (** Formalization of a Predicative System F
 
-We define our formalization of predicative System F by providing Coq
-datatypes for kinds, terms, types and environments. Then, we provide
-helper functions to work with these, altogether with inductive predicates
-for typing (assigning a type to a term) and kinding (assigning a kind to a
-type). *)
+We define our formalization of predicative System F by providing:
+
+* Coq datatypes for kinds, terms, types and environments ;
+* a decidable structural equality predicate over types ;
+* helper functions for shifting de Bruijn indices of type and term
+  variables in terms and types ;
+* helper functions for substitutions of type and term variables in
+  terms and types ;
+* helper functions for accessing kinds and types of type and term
+  variables in an environment ;
+* logical and decidable predicates for the wellformedness of types
+  and environments ;
+* a kinding logical predicate altogether with a kinding algorithm ;
+* a typing logical predicate altogether with a typing algorithm. *)
 
 Require Import Arith.
 
