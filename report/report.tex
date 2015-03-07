@@ -97,4 +97,31 @@
 \date{}
 \maketitle
 
+In this project, we formalized a version of predicative System F and
+proved interesting properties about it, mostly based on the paper
+\emph{Hereditary Substitution for Stratified System F} by H. D. Eades
+III and A. Stump.
+
+\section{Architecture of the project}
+
+As the script file grew larger and larger, we decided to split it in
+several distinct files that group related code. We thus provide :
+
+\begin{itemize}
+  \item \verb|SysF.v| for part \emph{I.1.2 Definitions} ;
+  \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
+  \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
+    terms} ;
+  \item \verb|StrongNormalization.v| as a basis for the optional
+    part \emph{II.1 Strong Normalization}.
+\end{itemize}
+
+Since every other file depends on the definitions in \verb|SysF.v|,
+using any of these files requires having compiled \verb|SysF.v|
+first. This may be done using \verb|make SysF.vo|. We provide
+compilation rules for each distinct file, which helps for sanity
+check. That is, running \verb|make| will compile all files
+(\verb|SysF.v| first) and thus fail if anything is wrong within the
+whole project.
+
 \end{document}
