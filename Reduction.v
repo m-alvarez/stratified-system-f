@@ -1,7 +1,9 @@
+Require Import Relations.
+
 Add LoadPath ".".
 
+(** Use [make SysF.vo] to compile SysF.v before executing this line. *)
 Require Import SysF.
-Require Import Relations.
 
 Inductive reduction : term -> term -> Prop :=
 | beta_app T t t' :

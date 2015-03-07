@@ -1,8 +1,33 @@
-Add LoadPath ".".
-
-Require Import SysF.
 Require Import Arith.
 Require Import Omega.
+
+Add LoadPath ".".
+
+(** Use [make SysF.vo] to compile SysF.v before executing this line. *)
+Require Import SysF.
+
+(** This lemma states cumulativity This is actually cumulativity *)
+Lemma cumulativity : forall (e : env) (T : typ) (K : kind),
+                     kinding e T K -> forall K', K <= K' -> kinding e T K'.
+  do 4 intro.
+  induction H.
+  - intros.
+    assert (Kp <= K') by omega.
+    eauto using k_tvar.
+  - intros.
+    destruct K'.
+    + inversion H0.
+    + assert (max Kp Kq <= K') by omega.
+      assert (max K' Kq = K') by eauto with arith.
+      rewrite <- H2.
+      eauto using k_tall with arith.
+  - intros.
+    assert (Kp <= max Kp Kq /\ Kq <= max Kp Kq) by auto with arith.
+    assert (max K' K' = K') by auto with arith.
+    rewrite <- H3.
+    destruct H2.
+    apply k_tarr; [ eauto using le_trans .. ]. (* TODO just eauto using k_tarr, le_trans doesn't work *)
+Qed.
 
 Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
 | ik_top K e :

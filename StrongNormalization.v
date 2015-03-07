@@ -1,7 +1,11 @@
+Require Import Arith.
+
 Add LoadPath ".".
 
+(** Use [make SysF.vo Correctness.vo Reduction.vo Metatheory.vo]
+    to compile the modules before executing these lines. *)
 Require Import SysF.
-Require Import Arith.
+Require Import Correctness.
 Require Import Reduction.
 Require Import Metatheory.
 
@@ -258,8 +262,6 @@ Section part_2.
     - intros. destruct i; eauto; discriminate.
   Qed.
   
-  Require Import Correctness.
-
   Lemma tsubst_kind_of :
     forall t e n t' k,
       kind_of e t' = Some k ->

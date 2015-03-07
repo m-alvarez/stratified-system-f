@@ -123,12 +123,9 @@ for sanity check. That is, running \verb|make| will compile all files
 respecting the order of dependencies, and thus fail if anything is
 wrong within the whole project.
 
-Since every other file depends on the definitions in \verb|SysF.v|,
-using any of these files requires having compiled \verb|SysF.v|
-first. This may be done using \verb|make SysF.vo|. Also,
-\verb|StrongNormalization.v| relies on the whole formalization, it is
-thus recommended to have run \verb|make| once before trying to execute
-it.
+Because of these dependencies, we strongly recommend running
+\verb|make| once before trying to run one of the files. This way, the
+dependencies will directly be available.
 
 \subsection{Definitions}
 
