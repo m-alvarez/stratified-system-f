@@ -53,8 +53,8 @@ Lemma insert_kind_get_kind_2 :
     + rewrite shift_var_s. eauto.
 Qed.
 
-Lemma fmap_compose :
-  forall A B C f g x, @fmap B C f (@fmap A B g x) = fmap (fun x => f (g x)) x.
+Lemma option_map_compose :
+  forall A B C f g x, @option_map B C f (@option_map A B g x) = option_map (fun x => f (g x)) x.
   intros. destruct x; auto.
 Qed.
 
@@ -111,11 +111,11 @@ Lemma insert_kind_get_typ :
   forall pos e e' k,
     insert_kind pos k e e' ->
     forall var,
-      fmap (tshift pos) (get_typ e var) = get_typ e' var.
+      option_map (tshift pos) (get_typ e var) = get_typ e' var.
   do 5 intro. induction H; intros.
   - auto.
   - destruct var. auto. apply IHinsert_kind.
-  - simpl. rewrite <- IHinsert_kind. do 2 rewrite fmap_compose.
+  - simpl. rewrite <- IHinsert_kind. do 2 rewrite option_map_compose.
     assert (pos = pos + 0) by auto. rewrite H0. 
     destruct (get_typ e var).
     + simpl. rewrite tshift_compose. auto.
