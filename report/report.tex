@@ -134,14 +134,24 @@ it.
 
 [...]
 
-We also define a structural decidable egality predicate over types
-\verb|beq_typ : typ -> typ -> bool|. We need it for example in
-\verb|type_of : env -> term -> option typ|, where we need to test for
-equality in a conditional statement. This can't be done using
-the usual equality \verb|eq|, whose result is in \verb|Prop|.
+We also define a structural decidable egality predicate over types:
+
+\begin{verbatim}
+beq_typ : typ -> typ -> bool
+\end{verbatim}
+
+We need it for example in the function:
+
+\begin{verbatim}
+type_of : env -> term -> option typ
+\end{verbatim}
+
+In this function, we need to test for equality in a conditional
+statement. This can't be done using the usual equality \verb|eq|,
+whose result is in \verb|Prop|.
 
 Of course, like in the exam with the structural decidable equality over
-Polynomials, this calls for the addition of some lemmas talking about
+polynomials, this calls for the addition of some lemmas talking about
 \verb|beq_typ| if we want to prove any interesting property about a
 function that uses it. In particular, in \verb|Correctness.v| we
 define two lemma that state that \verb|beq_typ| is correct and
@@ -152,6 +162,11 @@ reflexive.
 [...]
 
 \subsection{Reduction and Normal Terms}
+
+When we reached that point of the project, we thought that learning
+more about advanced Coq techniques could at the same time be
+interesting and allow us to gain some time. Thus, \verb|Reduction.v|
+uses notations and tactics that we defined ourselves.
 
 [...]
 
