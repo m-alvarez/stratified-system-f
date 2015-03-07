@@ -102,26 +102,60 @@ proved interesting properties about it, mostly based on the paper
 \emph{Hereditary Substitution for Stratified System F} by H. D. Eades
 III and A. Stump.
 
-\section{Architecture of the project}
+\section{Architecture of the Project}
 
-As the script file grew larger and larger, we decided to split it in
-several distinct files that group related code. We thus provide :
+As the script file grew larger and larger, we decided to split it into
+several distinct files that group altogether related code. We thus
+provide :
 
 \begin{itemize}
   \item \verb|SysF.v| for part \emph{I.1.2 Definitions} ;
   \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
   \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
-    terms} ;
+    Terms} ;
   \item \verb|StrongNormalization.v| as a basis for the optional
     part \emph{II.1 Strong Normalization}.
 \end{itemize}
 
 Since every other file depends on the definitions in \verb|SysF.v|,
 using any of these files requires having compiled \verb|SysF.v|
-first. This may be done using \verb|make SysF.vo|. We provide
+first. This may be done using \verb|make SysF.vo|. We actually provide
 compilation rules for each distinct file, which helps for sanity
 check. That is, running \verb|make| will compile all files
 (\verb|SysF.v| first) and thus fail if anything is wrong within the
 whole project.
+
+\subsection{Definitions}
+
+\subsection{Basic Metatheory}
+
+\subsection{Reduction and Normal Terms}
+
+\subsection{Strong Normalization}
+
+\section{Design Choices}
+
+The definition part allows some liberty in the design choices. In this
+section, we explain our choices and the reasons why we made them.
+
+\subsection{Indexes for Kind and Type Variables}
+
+We chose to index variables by separating types and kind variables.
+
+\subsection{Kinding and Typing predicates}
+
+On paper, the typing and kinding predicates are defined by deductive
+rules. In our early implementations, we described them as recursive
+predicates using \verb|Fixpoint| declarations. This was a very bad
+idea, and proving anything related to these predicates required a lot
+of efforts.
+
+After a while, we learned about inductive predicates and how
+appropriate they are for representing deductive rules in Coq. We thus
+switched to \verb|Inductive| definitions for both, and thanks to the
+inductive reasoning all properties became a lot easier to prove. Even
+though this change implied having to adapt all of the proofs that we
+had already done, in the end we have probably still gained time thanks
+to it.
 
 \end{document}
