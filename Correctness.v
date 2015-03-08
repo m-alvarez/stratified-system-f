@@ -20,8 +20,8 @@ Require Import Bool.
 
 Add LoadPath ".".
 
-(** Use [make SysF.vo Metatheory.vo] to compile the modules
-    before executing these lines. *)
+(* Use [make SysF.vo Metatheory.vo] to compile the modules
+   before executing these lines. *)
 Require Import SysF.
 Require Import Metatheory. (* for cumulativity *)
 

@@ -246,8 +246,8 @@ Section Kinding.
       kinding e (tarr T1 T2) (max Kp Kq)
   .
 
-  (** [kind_of e T] provides a kind for type [T] in environment [e],
-      if [T] is kindable in [e]. *)
+  (** [kind_of e T] provides a minimal kind for type [T] in
+      environment [e], if [T] is kindable in [e]. *)
   Fixpoint kind_of (e : env) (T : typ) : option kind :=
     match T with
       | tvar X => if bwf_env e then get_kind e X else None

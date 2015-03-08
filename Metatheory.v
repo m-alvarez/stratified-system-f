@@ -1,12 +1,18 @@
+(** Formalization of a Predicative System F
+
+In this file, we state and prove meta properties about our language. *)
+
 Require Import Arith.
 Require Import Omega.
 
 Add LoadPath ".".
 
-(** Use [make SysF.vo] to compile SysF.v before executing this line. *)
+(* Use [make SysF.vo] to compile SysF.v before executing this line. *)
 Require Import SysF.
 
-(** This lemma states cumulativity This is actually cumulativity *)
+(** This lemma states cumulativity. That is, that when a type has been
+    assigned a kind, any kind above it in the kind hierarchy is also
+    a valid kind for the type. *)
 Lemma cumulativity : forall (e : env) (T : typ) (K : kind),
                      kinding e T K -> forall K', K <= K' -> kinding e T K'.
   do 4 intro.
@@ -29,6 +35,9 @@ Lemma cumulativity : forall (e : env) (T : typ) (K : kind),
     apply k_tarr; [ eauto using le_trans .. ]. (* TODO just eauto using k_tarr, le_trans doesn't work *)
 Qed.
 
+(** [insert_kind pos K e e'] is a logical predicate that says that
+    [e'] is the environmnent obtained from [e] by inserting kind [K]
+    at position [pos]. *)
 Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
 | ik_top K e :
     insert_kind 0 K e (etvar K e)
