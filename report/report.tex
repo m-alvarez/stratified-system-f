@@ -97,10 +97,17 @@
 \date{}
 \maketitle
 
-In this project, we formalized a version of predicative System F and
+For this project, we formalized a predicative variant of System F and
 proved interesting properties about it, mostly based on the paper
 \emph{Hereditary Substitution for Stratified System F} by H. D. Eades
 III and A. Stump.
+
+In this document, we will first describe the architecture of the code
+used for the project. Then, we will give more details about our
+approach for each part. We think that following the sequential order
+of the project description is interesting, because it is the order in
+which we wrote the code. As such, it is also the order for our growth
+in experience.
 
 \section{Architecture of the Project}
 
@@ -114,7 +121,7 @@ provide :
   \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
   \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
     Terms} ;
-  \item \verb|StrongNormalization.v| as a basis for the optional
+  \item \verb|StrongNormalization.v| for the optional
     part \emph{II.1 Strong Normalization}.
 \end{itemize}
 
@@ -124,14 +131,27 @@ respecting the order of dependencies, and thus fail if anything is
 wrong within the whole project.
 
 Because of these dependencies, we strongly recommend running
-\verb|make| once before trying to run one of the files. This way, the
+\verb|make| once before trying to run one of the files. This way, all
 dependencies will directly be available.
 
-\subsection{Definitions}
+\section{Definitions}
 
-[...]
+\subsection{Kinds, Types and Environments}
 
-We also define a structural decidable egality predicate over types:
+We chose represent kinds and types using de-Bruijn indices, with
+one counter for kinds and one for types. Environments are then
+represented as a single context, using an inductive type which is
+isomorphic to \verb|list (kind + typ)|.
+
+This allows to know directly the order of definitions, which is
+required for example when checking that an environment is
+well-formed. This is not the case when environments are represented as
+distinct contexts by using a type isomorphic to
+\verb|list kind * list typ|.
+
+\subsection{Structural and Decidable Equality over Types}
+
+We defined a structural and decidable egality predicate over types:
 
 \begin{verbatim}
 beq_typ : typ -> typ -> bool
@@ -144,8 +164,10 @@ type_of : env -> term -> option typ
 \end{verbatim}
 
 In this function, we need to test for equality in a conditional
-statement. This can't be done using the usual equality \verb|eq|,
-whose result is in \verb|Prop|.
+statement. In coq, the usual equality predicate is \verb|eq|, which is
+a predicate with results in \verb|Prop|. That is, such a predicate
+only gives back a logical proposition for which we have no clue
+whether it is true or false.
 
 Of course, like in the exam with the structural decidable equality over
 polynomials, this calls for the addition of some lemmas talking about
@@ -154,36 +176,7 @@ function that uses it. In particular, in \verb|Correctness.v| we
 define two lemmas that state that \verb|beq_typ| is correct and
 reflexive.
 
-\subsection{Basic Metatheory}
-
-[...]
-
-\subsection{Reduction and Normal Terms}
-
-When we reached that point of the project, we thought that learning
-more about advanced Coq techniques could at the same time be
-interesting and allow us to gain some time. Thus, \verb|Reduction.v|
-uses notations and tactics that we defined ourselves.
-
-[...]
-
-\subsection{Strong Normalization}
-
-[...]
-
-
-\section{Design Choices}
-
-The definition part allows some liberty in the design choices. In this
-section, we explain our choices and the reasons why we made them.
-
-\subsection{Indexes for Kind and Type Variables}
-
-We chose to index variables by separating types and kind variables.
-
-[...]
-
-\subsection{Kinding and Typing predicates}
+\subsection{Kinding and Typing Predicates}
 
 On paper, the typing and kinding predicates are defined by deductive
 rules. In our early implementations, we described them as recursive
@@ -198,5 +191,22 @@ inductive reasoning all properties became a lot easier to prove. Even
 though this change implied having to adapt all of the proofs that we
 had already done, in the end we have probably still gained time thanks
 to it.
+
+\section{Basic Metatheory}
+
+[...]
+
+\section{Reduction and Normal Terms}
+
+When we reached that point of the project, we thought that learning
+more about advanced Coq techniques could at the same time be
+interesting and allow us to gain some time. Thus, \verb|Reduction.v|
+uses notations and tactics that we defined ourselves.
+
+[...]
+
+\section{Strong Normalization}
+
+[...]
 
 \end{document}
