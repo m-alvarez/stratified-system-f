@@ -1,6 +1,7 @@
 (** Formalization of a Predicative System F
 
-In this file, we state and prove meta properties about our language. *)
+In this file, we state and prove meta-properties about our language,
+in particular regularity and narrowing. *)
 
 Require Import Arith.
 Require Import Omega.

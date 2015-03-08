@@ -1,3 +1,14 @@
+(** Formalization of a Predicative System F
+
+In this file, we study reduction by providing:
+
+  * a definition of our reduction relation and its (reflexive and
+    usual) transitive closures ;
+  * a definition for normal and neutral terms ;
+  * proofs of correctness and completeness for these definitions ;
+  * proofs that normal and neutral terms are preserved by type
+    substitution.
+*)
 Require Import Relations.
 
 Add LoadPath ".".
