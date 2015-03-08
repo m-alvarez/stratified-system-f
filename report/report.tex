@@ -107,13 +107,14 @@ used for the project. Then, we will give more details about our
 approach for each part. We think that following the sequential order
 of the project description is interesting, because it is the order in
 which we wrote the code. As such, it is also the order for our growth
-in experience.
+in experience. We will finally conclude by taking a larger look at our
+solution as a whole and criticizing it.
 
-\section{Architecture of the Project}
+\section*{Overview}
 
 As the script file grew larger and larger, we decided to split it into
 several distinct files that group altogether related code. We thus
-provide :
+have:
 
 \begin{itemize}
   \item \verb|SysF.v| and \verb|Correctness.v| for part \emph{I.1.2
@@ -121,8 +122,8 @@ provide :
   \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
   \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
     Terms} ;
-  \item \verb|StrongNormalization.v| for the optional
-    part \emph{II.1 Strong Normalization}.
+  \item \verb|StrongNormalization.v| for part \emph{II.1 Strong
+    Normalization}.
 \end{itemize}
 
 We provide compilation rules for each distinct file, which helps
@@ -132,56 +133,57 @@ wrong within the whole project.
 
 Because of these dependencies, we strongly recommend running
 \verb|make| once before trying to run one of the files. This way, all
-dependencies will directly be available.
+dependencies will be directly available.
 
 \section{Definitions}
 
-\subsection{Kinds, Types and Environments}
+In file \verb|SysF.v|, we define our language by providing Coq
+datatypes for reasoning about terms, types, kinds and environments. We
+then provide helper functions. Finally, we provide predicates for
+typing and kinding as well as a kinding and a typing algorithm.
 
-We chose represent kinds and types using de-Bruijn indices, with
+In file \verb|Correctness.v|, we prove correctness (and sometimes
+completeness) properties about some of these functions and algorithms.
+
+Let us now comment the design choices that we made for this part and
+the problems that we faced.
+
+\subsection*{Kinds, Types and Environments}
+
+We chose to represent kinds and types using de Bruijn indices, with
 one counter for kinds and one for types. Environments are then
-represented as a single context, using an inductive type which is
-isomorphic to \verb|list (kind + typ)|.
+represented as a single context, using an inductive type \verb|env|
+which is isomorphic to \verb|list (kind + typ)|.
 
-This allows to know directly the order of definitions, which is
-required for example when checking that an environment is
-well-formed. This is not the case when environments are represented as
-distinct contexts by using a type isomorphic to
+This way, the environment itself carries along the order of
+definitions, which is required for example when checking that an
+environment is well-formed. This is not the case when environments are
+represented as distinct contexts by using a type isomorphic to
 \verb|list kind * list typ|.
 
-\subsection{Structural and Decidable Equality over Types}
+\subsection*{Structural and Decidable Equality over Types}
 
-We defined a structural and decidable egality predicate over types:
-
-\begin{verbatim}
-beq_typ : typ -> typ -> bool
-\end{verbatim}
-
-We need it for example in the function:
-
-\begin{verbatim}
-type_of : env -> term -> option typ
-\end{verbatim}
-
-In this function, we need to test for equality in a conditional
-statement. In coq, the usual equality predicate is \verb|eq|, which is
-a predicate with results in \verb|Prop|. That is, such a predicate
-only gives back a logical proposition for which we have no clue
-whether it is true or false.
+We had to define a structural and decidable egality predicate over
+types \verb|beq_typ|. We need it for example in \verb|type_of|, which
+tries to assign a type to a term. In this function, we need to test
+for equality in a conditional statement. In Coq, the usual equality
+predicate is \verb|eq|, which is a predicate with results in
+\verb|Prop|. Such a predicate only gives back a logical proposition
+for which we have no clue whether it is true or false.
 
 Of course, like in the exam with the structural decidable equality over
 polynomials, this calls for the addition of some lemmas talking about
 \verb|beq_typ| if we want to prove any interesting property about a
 function that uses it. In particular, in \verb|Correctness.v| we
-define two lemmas that state that \verb|beq_typ| is correct and
-reflexive.
+define two lemmas that state that \verb|beq_typ| is reflexive and,
+more interestingly, correct.
 
-\subsection{Kinding and Typing Predicates}
+\subsection*{Kinding and Typing Predicates}
 
 On paper, the typing and kinding predicates are defined by deductive
 rules. In our early implementations, we described them as recursive
-predicates using \verb|Fixpoint| declarations. This was a very bad
-idea, and proving anything related to these predicates required a lot
+predicates using \verb|Fixpoint| declarations. This was a bad idea,
+and proving anything related to these predicates required a lot
 of efforts.
 
 After a while, we learned about inductive predicates and how
@@ -192,7 +194,38 @@ though this change implied having to adapt all of the proofs that we
 had already done, in the end we have probably still gained time thanks
 to it.
 
+Notice that we still have some logical predicates defined using
+\verb|Fixpoint|. It is for example the case of \verb|wf_typ| (and
+\verb|wf_env|), which states the well-formedness of types
+(resp. environments). This is OK, because this definition is made
+by case on the type (resp. the environment). Thus, when we have a
+proof \verb|p : wf_typ e T| (resp. \verb|p : wf_env e|),
+we can reason by case on \verb|T| (resp. \verb|e|) to get the
+shape of \verb|p|. If we defined these predicates using
+\verb|Inductive|, we would instead reason by case on \verb|p| to get
+the shape of \verb|T| (resp. \verb|e|). So in these cases, the two
+possible definitions are somehow equivalent.
+
 \section{Basic Metatheory}
+
+[...]
+
+\subsection*{Inserting a Kind in an Environment}
+
+The predicate \verb|insert_kind| states that some environment is the
+result of inserting a kind in another environment at a given position.
+Our first definition for this predicate was wrong, but in subtle
+ways. Thus, many of the theorems were still true (but not all of
+them), and it took us a while to realize that in fact the definition
+itself was wrong.
+
+Moreover, the proofs back then were very different, because they
+relied on different properties, and also very long. For example,
+knowing if a type had a given kind required knowing how many free
+variables this type had. Now, we can apply extensionality which
+states that the kind of a type only depends on the kinds in the
+environment. The same ideas apply to typing, with a more complex
+notion of extensionality.
 
 [...]
 
@@ -206,6 +239,10 @@ uses notations and tactics that we defined ourselves.
 [...]
 
 \section{Strong Normalization}
+
+[...]
+
+\section*{Conclusion}
 
 [...]
 
