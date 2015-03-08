@@ -31,13 +31,18 @@ Inductive reduction : term -> term -> Prop :=
 (** [x ~> y] is a notation for [reduction x y]. *)
 Notation "x ~> y" := (reduction x y) (at level 80).
 
-(** [x ~>* y] is a notation for the transitive closure of [reduction].
-    That is, [t ~>* t'] says that [t'] can be obtained from [t] by one
-    or several steps of our previously defined reduction. *)
-Notation "x ~>* y" := (clos_trans term reduction x y) (at level 80).
+(** [x ~>* y] is a notation for the reflexive and transitive closure of
+    our reduction. That is, [t ~>* t'] says that [t'] can be obtained from
+    [t] by zero, one or several steps of this reduction. *)
+Notation "x ~>* y" := (clos_refl_trans term reduction x y) (at level 80).
 
-(** This tactic can be used to show [t ~> t'] when the required
-    hypotheses are available. *)
+(** [x ~>+ y] is a notation for the transitive closure of our reduction.
+    That is, [t ~>+ t'] says that [t'] can be obtained from [t] by one
+    or several steps of this reduction. *)
+Notation "x ~>+ y" := (clos_trans term reduction x y) (at level 80).
+
+(** This tactic can be used to show [t ~> t'] when we
+    know enough about [t] and [t'] to conclude. *)
 Ltac one_step :=
   simpl; (
     eauto
@@ -58,12 +63,15 @@ Ltac steps_unbound :=
   simpl;
   match goal with
     | |- _ ~> _ => one_step
-    | |- _ ~>* _ =>
+    | |- _ ~>+ _ =>
       (eapply t_step; one_step) || (eapply t_trans; [ (eauto || steps_unbound) .. ])
+    | |- _ ~>* _ =>
+      (eapply rt_step; one_step) || (eapply rt_refl) || (eapply rt_trans; [ (eauto || steps_unbound) .. ])
   end.
 
-(** This tactic can be used to try to show [t ~>* t'] in
-    finite time when the required hypotheses are available. *)
+(** This tactic can be used to show [t ~>* t'] or [t ~>+ t']
+    in finite time when we know enough about [t] and [t'] to
+    conclude. *)
 Ltac steps := timeout 2 steps_unbound.
 
 Section Examples.
@@ -85,10 +93,12 @@ Section Examples.
   Qed.
 
   (** This example shows a two step reduction:
-        (\x. x) ((\x. x) y) ~>* (\x. x) y ~> y *)
-  Example test3 : (app (abs T (var 0)) (app (abs T (var 0)) (var 0))) ~>* var 0.
+        (\x. x) ((\x. x) y) ~> (\x. x) y ~> y *)
+  Example test3 : let t := (app (abs T (var 0)) (app (abs T (var 0)) (var 0))) in
+                  let t' := var 0 in
+                  t ~>* t' /\ t ~>+ t'.
   Proof.
-    steps.
+    split; steps.
   Qed.
 
 End Examples.
@@ -96,44 +106,86 @@ End Examples.
 (**********************
  * Congruence for ~>* *
  **********************)
-Section ManyStepsCongurence.
+Section StepsCongruence.
 
-  (** This theorem proves that ~>* may be applied in
+  (** This theorem states that ~>* may be applied in
       any abstraction context. *)
-  Theorem many_steps_congruence_abs (t t' : term) :
+  Theorem steps_congruence_abs (t t' : term) :
     t ~>* t' -> forall T, abs T t ~>* abs T t'.
     intros. induction H; steps.
   Qed.
 
-  (** This theorem proves that ~>* may be applied in
+  (** This theorem states that ~>* may be applied in
       any type abstraction context. *)
-  Theorem many_steps_congruence_abs_t (t t' : term) :
+  Theorem steps_congruence_abs_t (t t' : term) :
     t ~>* t' -> forall k, abs_t k t ~>* abs_t k t'.
     intros. induction H; steps.
   Qed.
 
   (** This theorem proves that ~>* may be applied in
       any left application context. *)
-  Theorem many_steps_congruence_app_left (t t' : term) :
+  Theorem steps_congruence_app_left (t t' : term) :
     t ~>* t' -> forall t1, app t t1 ~>* app t' t1.
     intros. induction H; steps.
   Qed.
 
   (** This theorem proves that ~>* may be applied in
       any right application context. *)
-  Theorem many_steps_congruence_app_right (t t' : term) :
+  Theorem steps_congruence_app_right (t t' : term) :
     t ~>* t' -> forall t1, app t1 t ~>* app t1 t'.
     intros. induction H; steps.
   Qed.
 
   (** This theorem proves that ~>* may be applied in
       any type application context. *)
-  Theorem many_steps_congruence_app_t (t t' : term) :
+  Theorem steps_congruence_app_t (t t' : term) :
     t ~>* t' -> forall T, app_t t T ~>* app_t t' T.
     intros. induction H; steps.
   Qed.
 
-End ManyStepsCongurence.
+End StepsCongruence.
+
+(**********************
+ * Congruence for ~>+ *
+ **********************)
+Section ManyStepsCongruence.
+
+  (** This theorem states that ~>+ may be applied in
+      any abstraction context. *)
+  Theorem many_steps_congruence_abs (t t' : term) :
+    t ~>+ t' -> forall T, abs T t ~>+ abs T t'.
+    intros. induction H; steps.
+  Qed.
+
+  (** This theorem states that ~>+ may be applied in
+      any type abstraction context. *)
+  Theorem many_steps_congruence_abs_t (t t' : term) :
+    t ~>+ t' -> forall k, abs_t k t ~>+ abs_t k t'.
+    intros. induction H; steps.
+  Qed.
+
+  (** This theorem proves that ~>+ may be applied in
+      any left application context. *)
+  Theorem many_steps_congruence_app_left (t t' : term) :
+    t ~>+ t' -> forall t1, app t t1 ~>+ app t' t1.
+    intros. induction H; steps.
+  Qed.
+
+  (** This theorem proves that ~>+ may be applied in
+      any right application context. *)
+  Theorem many_steps_congruence_app_right (t t' : term) :
+    t ~>+ t' -> forall t1, app t1 t ~>+ app t1 t'.
+    intros. induction H; steps.
+  Qed.
+
+  (** This theorem proves that ~>+ may be applied in
+      any type application context. *)
+  Theorem many_steps_congruence_app_t (t t' : term) :
+    t ~>+ t' -> forall T, app_t t T ~>+ app_t t' T.
+    intros. induction H; steps.
+  Qed.
+
+End ManyStepsCongruence.
 
 (********************************************
  * Definitions for normal and neutral terms *
