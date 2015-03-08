@@ -300,6 +300,51 @@ some interesting lemmas are already proved.
 
 \section*{Conclusion}
 
-[...]
+In our solution, we have successfully answered all questions of the
+mandatory part of the project, and we have provided some answers for
+the optional part.
+
+We have mentioned two problems that led to a loss of time. The first
+one was having used a \verb|Fixpoint| definition instead of an
+\verb|Inductive| one for \verb|kinding| and \verb|typing|. The second
+problem was due to a bad definition for \verb|insert_kind|, which led
+to writing proofs that proved some of the theorems we wanted but were
+not adapted for the correct definition once we fixed it.
+
+As we have seen, we have acquired a lot of experience while doing the
+project. We have learned useful tactics that we didn't know before,
+and we have also had a taste of the tactics language in
+\verb|Reduction.v|. This allowed us to provide much more satisfactory,
+readable and concise proofs. In fact, some of our early proofs in
+\verb|Metatheory.v| were very long, and may hopefully be shortened
+using similar automation techniques.
+
+\section*{Appendix}
+
+In this appendix we describe the tactics that we found useful. We
+think that it may be interesting to teach them in the course.
+
+\begin{itemize}
+\item \verb|eauto|, \verb|eapply|, \verb|erewrite| -- they usually
+  avoid uses of \verb|specialize| ;
+\item \verb|pose| -- good when you want to take a lemma from the outside and put
+ it in your proof ;
+\item \verb|auto/eauto with arith|,
+  \verb|auto/eauto using [lemma_1,lemma_2...]| --
+ good when the proof is trivial but you need to remember a few lemmas
+ that are defined outside. It avoids you having to pose each of these lemmas ;
+\item \verb|;| in the tactics language: \verb|destruct; someTactic.| will apply
+  tactic \verb|someTactic| to all branches of the
+  \verb|destruct/case/induction| in parallel. This saves a
+ lot of inductions followed by intros in every branch of a proof ;
+\item \verb|try| allows you to apply a tactic and, if it doesn't work, it's ok.
+ This is good because some tactics like \verb|omega| or
+ \verb|discriminate| will fail if they don't work, so you couldn't
+ apply them without \verb|try| in a parallel setting ;
+\item \verb|discriminate/try discriminate| -- it's good when you have
+  a case analysis but some cases are impossible - like if you know
+  some term cannot be a variable. Discriminate will take care of those
+  cases.
+\end{itemize}
 
 \end{document}
