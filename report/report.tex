@@ -208,7 +208,14 @@ possible definitions are somehow equivalent.
 
 \section{Basic Metatheory}
 
-[...]
+In file \verb|Metatheory.v|, we prove regularity and narrowing for our
+system. This requires a lot of lemmas, and some proofs are very
+long. In fact, parts of these could probably be automatized using
+techniques that we will described in the next part. Yet, we think that
+it is good to keep these long proofs in the project since it allows
+for comparison with the automatized ones.
+
+Let us now describe the biggest problem that we faced in this part.
 
 \subsection*{Inserting a Kind in an Environment}
 
@@ -220,21 +227,29 @@ them), and it took us a while to realize that in fact the definition
 itself was wrong.
 
 Moreover, the proofs back then were very different, because they
-relied on different properties, and also very long. For example,
+relied on different properties, and really huge. For example,
 knowing if a type had a given kind required knowing how many free
 variables this type had. Now, we can apply extensionality which
 states that the kind of a type only depends on the kinds in the
 environment. The same ideas apply to typing, with a more complex
 notion of extensionality.
 
-[...]
-
 \section{Reduction and Normal Terms}
+
+In file \verb|Reduction.v|, we study reduction. We fist define our
+reduction relation together with its (reflexive and usual) transitive
+closures. Then, we give inductive predicates that characterize normal
+and neutral terms and prove that this characterization is correct and
+complete. Finally, we prove that type substitution preserves normality
+and neutralily.
 
 When we reached that point of the project, we thought that learning
 more about advanced Coq techniques could at the same time be
-interesting and allow us to gain some time. Thus, \verb|Reduction.v|
-uses notations and tactics that we defined ourselves.
+interesting and allow us to gain some time. Thus, in addition to
+notations, \verb|Reduction.v| uses tactics that we defined ourselves,
+allowing for some amount of automation.
+
+Let us now describe these tactics.
 
 [...]
 
