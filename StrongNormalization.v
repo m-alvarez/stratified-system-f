@@ -1,3 +1,8 @@
+(** Formalization of a Predicative System F
+
+In this file, we attempt to prove strong normalization for
+our system. *)
+
 Require Import Arith.
 
 Add LoadPath ".".
@@ -9,7 +14,7 @@ Require Import Correctness.
 Require Import Reduction.
 Require Import Metatheory.
 
-Section part_1.
+Section Part1.
 
     Definition interp (T : typ) (e : env) t :=
       normal t /\ typing e t T.
@@ -69,9 +74,9 @@ Section part_1.
         + rewrite H. eapply t_app_t; eauto.
     Qed. 
  
-End part_1.
+End Part1.
 
-Section part_2.
+Section Part2.
   Inductive type_lt : env -> typ -> typ -> Prop :=
   | order_arrow_l e T1 T2 : type_lt e T1 (tarr T1 T2)
   | order_arrow_r e T1 T2 : type_lt e T2 (tarr T1 T2)
@@ -215,40 +220,41 @@ Section part_2.
     intro. induction T; simpl; auto with arith.
   Qed.
   
-  (*
+  (* WARNING: From this point, some parts of the proofs are admitted. *)
+
   Lemma type_order_order e : 
     forall (x y : typ), 
       kind_of e x <> None -> kind_of e y <> None ->
       type_lt e x y -> order (e, x) (e, y).
     intros.
     induction H1.
-    - remember (kind_of e t1) as k1.
-      remember (kind_of e (tarr t1 t2)) as k2.
+    - remember (kind_of e T1) as k1.
+      remember (kind_of e (tarr T1 T2)) as k2.
       destruct k1, k2; try (exfalso; solve [auto]).
       unfold order.
       unfold pair_into_nats. rewrite <- Heqk1, <- Heqk2. simpl.
       assert (k = k0 \/ k < k0).
       { inversion Heqk2. rewrite <- Heqk1 in H2. 
-        destruct (kind_of e t2); try (exfalso; solve[auto]).
+        destruct (kind_of e T2); try (exfalso; solve[auto]).
         inversion H2. assert (k <= max k k1) by auto with arith. 
         destruct H1; auto with arith. }
       destruct H1.
       + rewrite <- H1. apply right_lex. 
         eauto using num_quantifiers_variables_nonzero with arith.
       + apply left_lex. auto.
-    - remember (kind_of e t2) as k1.
-      remember (kind_of e (tarr t1 t2)) as k2.
+    - remember (kind_of e T2) as k1.
+      remember (kind_of e (tarr T1 T2)) as k2.
       destruct k1, k2; try (exfalso; solve [auto]).
       unfold order.
       unfold pair_into_nats. rewrite <- Heqk1, <- Heqk2. simpl.
       assert (k = k0 \/ k < k0).
       { inversion Heqk2. rewrite <- Heqk1 in H2. 
-        destruct (kind_of e t1); try (exfalso; solve[auto]).
+        destruct (kind_of e T1); try (exfalso; solve[auto]).
         inversion H2. assert (k <= max k1 k) by auto with arith.
         destruct H1; auto with arith. }
       destruct H1.
       + rewrite <- H1. apply right_lex.
-        pose (num_quantifiers_variables_nonzero t1).
+        pose (num_quantifiers_variables_nonzero T1).
         omega.
       + apply left_lex. auto.
     - admit.
@@ -299,6 +305,7 @@ Section part_2.
        * from Metatheory.v for kind_of! *)
   Qed.
 
+  (*
   Lemma tsubst_kind_lt :
     forall e t t' k,
       kind_of e t' = Some k ->
@@ -328,8 +335,9 @@ Section part_2.
       remember (kind_of e t1) as k1. remember (kind_of e t2) as k2.
       destruct k1, k2; try discriminate; try eauto.
       + simpl.
+  *)
 
-      
+  (*
   Fixpoint hereditary_substitution (t : term) (v : nat) (t' : term) (T : typ) :=
     match t with
       | var y =>
@@ -354,6 +362,6 @@ Section part_2.
           | _ => app_t u T'
         end
     end.
+    *)
 
-  *)
-End part_2.
+End Part2.

@@ -5,7 +5,7 @@
 %% - The main purpose of this project is to evaluate your approach to
 %% formalization, and your comments on the value of the solutions you
 %% tried. Investigating several possible definitions/proof methods is a
-%% good thing and we value your description of the problems encountered
+%% good thing and we value yoru description of the problems encountered
 %% and of the solutions you eventually preferred as much as the the
 %% number of questions you answer too. The best mark will not necessarily
 %% go to the project answering the maximum number of questions.
@@ -122,8 +122,8 @@ have:
   \item \verb|Metatheory.v| for part \emph{I.1.3 Basic Metatheory} ;
   \item \verb|Reduction.v| for part \emph{I.2 Reduction and Normal
     Terms} ;
-  \item \verb|StrongNormalization.v| for part \emph{II.1 Strong
-    Normalization}.
+  \item \verb|StrongNormalization.v| for parts \emph{II.1 Strong
+    Normalization} and \emph{II.2 Hereditary Substitution}.
 \end{itemize}
 
 We provide compilation rules for each distinct file, which helps
@@ -211,7 +211,7 @@ possible definitions are somehow equivalent.
 In file \verb|Metatheory.v|, we prove regularity and narrowing for our
 system. This requires a lot of lemmas, and some proofs are very
 long. In fact, parts of these could probably be automatized using
-techniques that we will described in the next part. Yet, we think that
+techniques that we will describe in the next part. Yet, we think that
 it is good to keep these long proofs in the project since it allows
 for comparison with the automatized ones.
 
@@ -249,13 +249,54 @@ interesting and allow us to gain some time. Thus, in addition to
 notations, \verb|Reduction.v| uses tactics that we defined ourselves,
 allowing for some amount of automation.
 
+This automation was very useful and allowed us to write concise
+proofs. It allows to take away the trivial parts of the proofs so that
+the writer (and later the reader) can focus on the interesting parts.
+
 Let us now describe these tactics.
 
-[...]
+\subsection{Proving a Reduction}
+
+The first tactic that we implemented, \verb|one_step|, allows to prove
+a one-step reduction when we have sufficient knowledge about the terms
+involved to conclude. In order to do this, it tries to \verb|eapply|
+each of the constructor of the inductive predicate that defines our
+reduction. In the case of a reduction in a context, it performs a
+recursive tactic call to prove it. Despite recursion, this tactic
+always terminates because the terms involved in the recursion are
+always strictly smaller than the former arguments.
+
+The second tactic that we implemented, \verb|steps|, allows to prove
+a reduction in zero, one or several steps. It works like \verb|step|,
+but for this tactic the recursive call may not terminate: it will
+go on until we succeed in proving that there is indeed a n-step
+reduction between the terms involved, and thus loop if we cannot
+succeed in proving it. Because of this, we first implemented another
+tactic, \verb|steps_unbound|, which may not terminate. Then, we
+defined \verb|steps| as applying the \verb|steps_unbound| tactic with
+a time limit.
+
+In fact, it could be more interesting to have the user provide a limit
+on the number of recursive calls, rather than force an arbitrary limit
+on the time of the execution. This would allow the tactic to have a
+deterministic behavior. However, we think that our solution is
+satisfactory enough for the purpose of the project.
+
+\subsection{Proving Normality and Neutrality}
+
+We then implemented two tactics, \verb|neutralize| and
+\verb|normalize|, which allow to prove that a term is neutral
+(resp. normal) when we have sufficient knowledge about it to conclude.
+Like step, they work by trying to apply the constructors of the
+inductive predicate, with some potential recursive calls that always
+terminate.
 
 \section{Strong Normalization}
 
-[...]
+In \verb|StrongNormalization.v|, we provide some answers that could
+lead to the proof of strong normalization for our system. This part is
+not finished, and some proofs contain admitted fragments. However,
+some interesting lemmas are already proved.
 
 \section*{Conclusion}
 

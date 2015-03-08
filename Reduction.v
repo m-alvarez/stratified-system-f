@@ -7,8 +7,8 @@ In this file, we study reduction by providing:
   * a definition for normal and neutral terms ;
   * proofs of correctness and completeness for these definitions ;
   * proofs that normal and neutral terms are preserved by type
-    substitution.
-*)
+    substitution. *)
+
 Require Import Relations.
 
 Add LoadPath ".".
@@ -213,6 +213,8 @@ with neutral : term -> Prop :=
      | neutral_app_t t T : neutral t -> neutral (app_t t T)
 .
 
+(** This tactic can be used to show [neutral t] when
+    we know enough about [t] to conclude. *)
 Ltac neutralize :=
   simpl;
   (eauto
@@ -221,6 +223,8 @@ Ltac neutralize :=
           | |- neutral (app_t _ _) => (apply neutral_app_t; neutralize)
           | |- neutral (app _ _) => (apply neutral_app; [ neutralize | normalize ])
         end)
+  (** This tactic can be used to show [normal t] when
+      we know enough about [t] to conclude. *)
   with normalize :=
   simpl;
   (eauto 
@@ -234,7 +238,8 @@ Ltac neutralize :=
  * Proofs of correctness and completeness for the previous definitions *
  ***********************************************************************)
 
-Section correctness_and_completeness.
+Section CorrectnessAndCompleteness.
+
   Lemma normality_neutrality_correctness (t : term) (H : normal t \/ neutral t) :
     forall t', ~ (t ~> t').
     induction t; intros; intro; inversion H0.
@@ -314,7 +319,8 @@ Section correctness_and_completeness.
           * exfalso. apply (H (subst_typ t 0 t0)). one_step.
           * left. inversion H0. normalize.
     Qed.
-End correctness_and_completeness.
+
+End CorrectnessAndCompleteness.
 
 (*************************************
  * Preservation by type substitution *
