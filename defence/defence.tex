@@ -23,10 +23,135 @@
 
 \begin{document}
 
-
 \begin{frame}
 \titlepage
 \end{frame}
 
+%% - Summarize what you have formalized in this project. Recall briefly what the
+%% project was about, the main steps of the formalization. Describe the part of the
+%% project you addressed if you did not answer all the questions, describe your
+%% personal work if you did more than what was required.
+
+%% - Explain and comment your formalization choices, if applicable mention the
+%% possible alternatives you investigated and the reasons of your final choice.
+
+%% - If applicable, comment what was difficult/tedious, why, the possible
+%% suggestion/solution you can see to these problems would you have more time to
+%% work on it.
+
+\section{Overview of our Formalization}
+
+\subsection{Stratified System F}
+
+\begin{frame}
+%% TODO Present stratified system F.
+\end{frame}
+
+\begin{frame}
+  In this project, we have :
+
+  \begin{itemize}
+    \item defined our formalization of a predicative System F ;
+    \item defined correct type and kind inference algorithms ;
+    \item stated and proved meta-properties about our language ;
+    \item defined an operational semantics for our system ;
+    \item . %% TODO Put something about strong normalization here.
+  \end{itemize}
+\end{frame}
+
+\subsection{Definitions and Correctness Properties}
+
+\begin{frame}[fragile]
+
+\begin{verbatim}
+Definition kind := nat.
+Inductive typ := [...].
+Inductive term := [...].
+Inductive env := [...].
+
+Inductive kinding : env -> typ -> kind -> Prop := [...].
+Inductive typing : env -> term -> typ -> Prop := [...].
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+%% This text overlaps
+
+%% We defined type and kind inference algorithms and proved them correct.
+
+\begin{verbatim}
+(** [kind_of e T] provides a minimal kind for type [T] in
+    environment [e], if [T] is kindable in [e]. *)
+Fixpoint kind_of (e : env) (T : typ) : option kind := [...].
+
+(** [type_of e t] provides a type for term [t] in environment [e],
+    if [t] is typable in [e]. *)
+Fixpoint type_of (e : env) (t : term) : option typ := [...].
+
+Theorem kind_of_correct (T : typ) :
+  forall (e : env) (K : kind), 
+  kind_of e T = Some K -> kinding e T K.
+
+Theorem type_of_correct (t : term) : 
+  forall (e : env) (T : typ), 
+  type_of e t = Some T -> typing e t T.
+\end{verbatim}
+
+\end{frame}
+
+\subsection{Metatheory}
+
+\begin{frame}[fragile]
+
+\begin{verbatim}
+Theorem regularity :
+  forall (e : env) (t : term) (T : typ),
+    typing e t T ->
+    exists (K : kind), kinding e T K.
+
+Theorem narrowing :
+  forall (e' : env) (t : term) (T : typ),
+    typing e' t T ->
+    forall (pos : nat) (e e'' : env) (K' K'' : kind),
+    insert_kind pos K' e e' ->
+    insert_kind pos K'' e e'' ->
+    K'' <= K' ->
+    typing e'' t T.
+\end{verbatim}
+
+\end{frame}
+
+\subsection{Reduction and Strong Normalization}
+
+\begin{frame}[fragile]
+
+\begin{verbatim}
+Inductive reduction : term -> term -> Prop := [...].
+
+Inductive normal : term -> Prop := [...]
+  with neutral : term -> Prop := [...].
+
+Theorem normality_preserved (t : term) (H : normal t) :
+  forall (pos : nat) (T : typ), normal (subst_typ t pos T).
+
+Theorem neutrality_preserved (t : term) (H : neutral t) :
+  forall (pos : nat) (T : typ), neutral (subst_typ t pos T).
+\end{verbatim}
+
+%% TODO: add stuff from StrongNormalization.v
+
+\end{frame}
+
+%\section{}
+
+%\section{}
+
+\begin{frame}[fragile]
+  \begin{center}
+    Thank you for your attention!
+  \end{center}
+\end{frame}
 
 \end{document}
