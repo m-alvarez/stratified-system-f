@@ -156,9 +156,13 @@ Theorem neutrality_preserved (t : term) (H : neutral t) :
 
 \begin{itemize}
 \item Variables: de Bruijn indices with distinct counters ;
-\item Environments: \verb|list (typ + kind)| rather than
-  \verb|list typ * list kind|.
-\item This choice makes well-formedness easy to state.
+\item Environments:
+  \begin{enumerate}
+    \item \verb|list (typ + kind)| ;
+    \item \verb|list typ * list kind| ;
+  \end{enumerate}
+\item 1 carries along the order of definitions ;
+\item So choosing 1 makes well-formedness easy to state.
 \end{itemize}
 
 \begin{verbatim}
