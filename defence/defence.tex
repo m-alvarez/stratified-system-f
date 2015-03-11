@@ -44,24 +44,29 @@
 \subsection{Stratified System F}
 
 \begin{frame}
+  \frametitle{About Stratified System F}
+
 %% TODO Present stratified system F.
 \end{frame}
 
 \begin{frame}
-  In this project, we have :
+  \frametitle{Our Project}
 
   \begin{itemize}
-    \item defined our formalization of a predicative System F ;
-    \item defined correct type and kind inference algorithms ;
-    \item stated and proved meta-properties about our language ;
-    \item defined an operational semantics for our system ;
+    \item a formalization of a predicative System F ;
+    \item correct type and kind inference algorithms ;
+    \item proofs of meta-properties ;
+    \item operational semantics ;
     \item . %% TODO Put something about strong normalization here.
   \end{itemize}
+
 \end{frame}
 
 \subsection{Definitions and Correctness Properties}
 
 \begin{frame}[fragile]
+
+  \frametitle{A Formalization of a Predicative System F}
 
 \begin{verbatim}
 Definition kind := nat.
@@ -77,17 +82,10 @@ Inductive typing : env -> term -> typ -> Prop := [...].
 
 \begin{frame}[fragile]
 
-%% This text overlaps
-
-%% We defined type and kind inference algorithms and proved them correct.
+\frametitle{Correct Type and Kind Inference Algorithms}
 
 \begin{verbatim}
-(** [kind_of e T] provides a minimal kind for type [T] in
-    environment [e], if [T] is kindable in [e]. *)
 Fixpoint kind_of (e : env) (T : typ) : option kind := [...].
-
-(** [type_of e t] provides a type for term [t] in environment [e],
-    if [t] is typable in [e]. *)
 Fixpoint type_of (e : env) (t : term) : option typ := [...].
 
 Theorem kind_of_correct (T : typ) :
@@ -104,6 +102,8 @@ Theorem type_of_correct (t : term) :
 \subsection{Metatheory}
 
 \begin{frame}[fragile]
+
+\frametitle{Proofs of Meta-Properties}
 
 \begin{verbatim}
 Theorem regularity :
@@ -127,6 +127,8 @@ Theorem narrowing :
 
 \begin{frame}[fragile]
 
+\frametitle{Operational Semantics}
+
 \begin{verbatim}
 Inductive reduction : term -> term -> Prop := [...].
 
@@ -140,13 +142,43 @@ Theorem neutrality_preserved (t : term) (H : neutral t) :
   forall (pos : nat) (T : typ), neutral (subst_typ t pos T).
 \end{verbatim}
 
-%% TODO: add stuff from StrongNormalization.v
+%% TODO: add stuff from StrongNormalization.v (maybe on another slide)
 
 \end{frame}
 
-%\section{}
+\section{Design Choices and Alternatives}
 
-%\section{}
+\subsection{Definitions}
+
+\begin{frame}[fragile]
+
+\frametitle{Variables and Environments}
+
+\begin{itemize}
+\item Variables: de Bruijn indices with distinct counters ;
+\item Environments: \verb|list (typ + kind)| rather than
+  \verb|list typ * list kind|.
+\item This choice makes well-formedness easy to state.
+\end{itemize}
+
+\begin{verbatim}
+Fixpoint wf_env (e : env) : Prop :=
+    match e with
+      | empty      => True
+      | evar T e'  => wf_typ e' T /\ wf_env e'
+      | etvar K e' => wf_env e'
+    end.
+\end{verbatim}
+
+\end{frame}
+
+\section{Problems}
+
+\begin{frame}
+\end{frame}
+
+%% No section for the final slide
+\section*{}
 
 \begin{frame}[fragile]
   \begin{center}
