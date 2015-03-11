@@ -5,9 +5,11 @@
 \usepackage[english]{babel}
 \usepackage{amsmath}
 \usepackage{datetime}
+\usepackage{verbments} % Requires verbments & Pygments
 \usetheme{Warsaw}
 
 \setbeamercolor{footline}{fg=black}
+\plset{language=coq,fontsize=\small}
 
 \addtobeamertemplate{navigation symbols}{}{%
     \usebeamerfont{footline}%
@@ -68,15 +70,17 @@
 
   \frametitle{A Formalization of a Predicative System F}
 
-\begin{verbatim}
+\begin{pyglist}
 Definition kind := nat.
-Inductive typ := [...].
-Inductive term := [...].
-Inductive env := [...].
+Inductive typ := (* ... *).
+Inductive term := (* ... *).
+Inductive env := (* ... *).
+\end{pyglist}
 
-Inductive kinding : env -> typ -> kind -> Prop := [...].
-Inductive typing : env -> term -> typ -> Prop := [...].
-\end{verbatim}
+\begin{pyglist}
+Inductive kinding : env -> typ -> kind -> Prop := (* ... *).
+Inductive typing : env -> term -> typ -> Prop := (* ... *).
+\end{pyglist}
 
 \end{frame}
 
@@ -84,18 +88,27 @@ Inductive typing : env -> term -> typ -> Prop := [...].
 
 \frametitle{Correct Type and Kind Inference Algorithms}
 
-\begin{verbatim}
-Fixpoint kind_of (e : env) (T : typ) : option kind := [...].
-Fixpoint type_of (e : env) (t : term) : option typ := [...].
+\begin{pyglist}
+Fixpoint kind_of (e : env) (T : typ) :
+  option kind := (* ... *).
+\end{pyglist}
 
+\begin{pyglist}
+Fixpoint type_of (e : env) (t : term) :
+  option typ := (* ... *).
+\end{pyglist}
+
+\begin{pyglist}
 Theorem kind_of_correct (T : typ) :
   forall (e : env) (K : kind), 
   kind_of e T = Some K -> kinding e T K.
+\end{pyglist}
 
+\begin{pyglist}
 Theorem type_of_correct (t : term) : 
   forall (e : env) (T : typ), 
   type_of e t = Some T -> typing e t T.
-\end{verbatim}
+\end{pyglist}
 
 \end{frame}
 
@@ -105,12 +118,14 @@ Theorem type_of_correct (t : term) :
 
 \frametitle{Proofs of Meta-Properties}
 
-\begin{verbatim}
+\begin{pyglist}
 Theorem regularity :
   forall (e : env) (t : term) (T : typ),
     typing e t T ->
     exists (K : kind), kinding e T K.
+\end{pyglist}
 
+\begin{pyglist}
 Theorem narrowing :
   forall (e' : env) (t : term) (T : typ),
     typing e' t T ->
@@ -119,7 +134,7 @@ Theorem narrowing :
     insert_kind pos K'' e e'' ->
     K'' <= K' ->
     typing e'' t T.
-\end{verbatim}
+\end{pyglist}
 
 \end{frame}
 
@@ -129,18 +144,24 @@ Theorem narrowing :
 
 \frametitle{Operational Semantics}
 
-\begin{verbatim}
-Inductive reduction : term -> term -> Prop := [...].
+\begin{pyglist}
+Inductive reduction : term -> term -> Prop := (* ... *).
+\end{pyglist}
 
-Inductive normal : term -> Prop := [...]
-  with neutral : term -> Prop := [...].
+\begin{pyglist}
+Inductive normal : term -> Prop := (* ... *)
+  with neutral : term -> Prop := (* ... *).
+\end{pyglist}
 
+\begin{pyglist}
 Theorem normality_preserved (t : term) (H : normal t) :
   forall (pos : nat) (T : typ), normal (subst_typ t pos T).
+\end{pyglist}
 
+\begin{pyglist}
 Theorem neutrality_preserved (t : term) (H : neutral t) :
   forall (pos : nat) (T : typ), neutral (subst_typ t pos T).
-\end{verbatim}
+\end{pyglist}
 
 %% TODO: add stuff from StrongNormalization.v (maybe on another slide)
 
@@ -166,14 +187,106 @@ Theorem neutrality_preserved (t : term) (H : neutral t) :
 \item So choosing 1 makes well-formedness easy to state.
 \end{itemize}
 
-\begin{verbatim}
+\begin{pyglist}
 Fixpoint wf_env (e : env) : Prop :=
-    match e with
-      | empty      => True
-      | evar T e'  => wf_typ e' T /\ wf_env e'
-      | etvar K e' => wf_env e'
-    end.
-\end{verbatim}
+  match e with
+    | empty      => True
+    | evar T e'  => wf_typ e' T /\ wf_env e'
+    | etvar K e' => wf_env e'
+  end.
+\end{pyglist}
+
+\end{frame}
+
+\subsection{Use Inductive Predicates for Deduction Rules}
+
+\begin{frame}[fragile]
+
+\frametitle{Let's Compare}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Fixpoint kinding (e : env) (T : typ) (K : kind) : Prop :=
+  match T with
+  | tvar X => match get_kind e X with
+              | None => False
+              | Some K' => wf_env e /\ K' <= K
+              end
+  | tarr T1 T2 => exists K1 K2 : kind,
+      max K1 K2 = K /\ kinding e T1 K1 /\ kinding e T2 K2
+  | tall K1 T1 => exists K' : kind,
+      kinding (etvar K1 e) T1 K' /\ K = S (max K1 K')
+  end.
+\end{pyglist}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Inductive kinding : env -> typ -> kind -> Prop :=
+| k_tvar (e : env) (X : nat) (Kp Kq : kind) :
+  wf_env e -> get_kind e X = Some Kp -> Kp <= Kq -> kinding e (tvar X) Kq
+| k_tall (e : env) (T : typ) (Kp Kq : kind) :
+  kinding (etvar Kq e) T Kp -> kinding e (tall Kq T) (S (max Kp Kq))
+| k_tarr (e : env) (T1 T2 : typ) (Kp Kq : kind) :
+  kinding e T1 Kp -> kinding e T2 Kq -> kinding e (tarr T1 T2) (max Kp Kq)
+.
+\end{pyglist}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+\frametitle{You Don't Want This…}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Fixpoint typing (e : env) (t : term) (T : typ) : Prop :=
+  match t with
+  | var x => match get_typ e x with
+             | None => False
+             | Some T' => wf_env e /\ T = T'
+             end
+  | abs T' t' => match T with
+                 | tarr T1 T2 =>
+                     T1 = T' /\ typing (evar T1 e) t' T2
+                 | _ => False
+                 end
+  | app t1 t2 => exists T2 : typ, typing e t1 (tarr T2 T) /\ typing e t2 T2
+  | abs_t k t' => match T with
+                  | tall k' T' =>
+                      k' = k /\ typing (etvar k e) t' T'
+                  | _ => False
+                  end
+  | app_t t' T' => exists l : kind, exists T1 : typ,
+      typing e t' (tall l T1) /\ kinding e T' l /\ T = tsubst T1 0 T'
+  end.
+\end{pyglist}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+\frametitle{You Want This!}
+
+\begin{itemize}
+  \item Clearer for the programmer.
+  \item Much easier proofs.
+\end{itemize}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Inductive typing : env -> term -> typ -> Prop :=
+| t_var (e : env) (X : nat) (T : typ) :
+    wf_env e -> get_typ e X = Some T ->
+    typing e (var X) T
+| t_abs (e : env) (T1 T2 : typ) (t : term) :
+    wf_typ e T1 -> typing (evar T1 e) t T2 ->
+    typing e (abs T1 t) (tarr T1 T2)
+| t_app (e : env) (T1 T2 : typ) (t1 : term) (t2 : term) :
+    typing e t1 (tarr T1 T2) -> typing e t2 T1 ->
+    typing e (app t1 t2) T2
+| t_abs_t (e : env) (K : kind) (t : term) (T : typ) :
+    typing (etvar K e) t T -> typing e (abs_t K t) (tall K T)
+| t_app_t (e : env) (K : kind) (t : term) (T1 T2 : typ) :
+    typing e t (tall K T1) -> kinding e T2 K ->
+    typing e (app_t t T2) (tsubst T1 0 T2)
+.
+\end{pyglist}
 
 \end{frame}
 
