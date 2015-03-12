@@ -198,7 +198,7 @@ Fixpoint wf_env (e : env) : Prop :=
 
 \end{frame}
 
-\subsection{Use Inductive Predicates for Deduction Rules}
+\subsection{Inductive Predicates for Deduction Rules}
 
 \begin{frame}[fragile]
 
@@ -292,7 +292,51 @@ Inductive typing : env -> term -> typ -> Prop :=
 
 \section{Problems}
 
-\begin{frame}
+\begin{frame}[fragile]
+\frametitle{A Wrong Definition for Kind Insertion}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Definition insert_kind (v : nat) := insert_kind_r v v.
+Fixpoint insert_kind_r (i : nat) (v : nat) (e : env) (e' : env) : Prop :=
+match e with
+| evar t e1 => match e' with
+               | evar t' e1' =>
+                   (tshift v t) = t' /\ insert_kind_r i v e1 e1'
+               | _ => False
+               end
+| etvar k e1 => match e' with
+                | etvar k' e1' => match i with
+                                  | 0 => etvar k e1 = e1'
+                                  | S i1 =>
+                                      k = k' /\ insert_kind_r i1 v e1 e1'
+                                  end
+                | _ => False
+                end
+  | empty => match e' with
+             | etvar k empty => v = 0
+             | _ => False
+             end
+end.
+\end{pyglist}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Our Final Definition for Kind Insertion}
+
+\begin{pyglist}
+Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
+| ik_top K e :
+    insert_kind 0 K e (etvar K e)
+| ik_evar pos K T e e' :
+    insert_kind pos K e e' ->
+    insert_kind pos K (evar T e) (evar (tshift pos T) e')
+| ik_etvar pos K K' e e' :
+    insert_kind pos K e e' ->
+    insert_kind (S pos) K (etvar K' e) (etvar K' e')
+.
+\end{pyglist}
+
 \end{frame}
 
 %% No section for the final slide
