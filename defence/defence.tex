@@ -290,7 +290,9 @@ Inductive typing : env -> term -> typ -> Prop :=
 
 \end{frame}
 
-\section{Problems}
+\section{Problems and Solutions}
+
+\subsection{Proving Metatheoretical Properties}
 
 \begin{frame}[fragile]
 \frametitle{A Wrong Definition for Kind Insertion}
@@ -339,10 +341,8 @@ Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
 
 \end{frame}
 
-\section*{}
-
 \begin{frame}[fragile]
-\frametitle{Proving metatheoretical properties: extensionality}
+\frametitle{Use of Extensionality}
 \begin{itemize}
   \item Intuitive idea: many properties only depend on in-scope variables.
   \item Example: \textbf{wf\_typ}.
@@ -364,9 +364,10 @@ Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
 \end{pyglist}
 \end{frame}
 
+\subsection{Getting Rid of Boring Proofs}
 
 \begin{frame}[fragile]
-\frametitle{Term reduction}
+\frametitle{Term Reduction}
 \begin{itemize}
   \item Semantics given by an inductive predicate for reduction
   \item Further predicates for reflexive and transitive closure
@@ -389,7 +390,7 @@ Notation ``x ~>* y'' := (clos_refl_trans term reduction x y).
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Turning Coq into a lambda-calculator}
+\frametitle{Turning Coq Into a Lambda-Calculator}
 \begin{itemize}
   \item Many proofs involving reduction are trivial and boring.
   \item The programmer has to manually find the sequence of reductions.
@@ -412,7 +413,7 @@ Ltac one_step :=
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Who said Coq isn't Turing-complete?}
+\frametitle{Who Said Coq Isn't Turing-Complete?}
 \begin{pyglist}[fontsize=\scriptsize]
 Ltac steps_unbound :=
   simpl;
@@ -434,7 +435,7 @@ Ltac steps := timeout 2 steps_unbound.
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Normaland neutral terms}
+\frametitle{Normal and Neutral Terms}
 \begin{itemize}
   \item Inductive predicates for normal and neutral terms
   \item ...together with more brute force tactics!
@@ -461,7 +462,7 @@ Ltac neutralize :=
 \end{pyglist}
 \end{frame}
 
-\section{Tips and tricks}
+\subsection{Tips and Tricks}
 
 \begin{frame}
   \frametitle{Some useful tactics}
