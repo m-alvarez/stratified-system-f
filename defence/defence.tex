@@ -59,7 +59,7 @@
     \item correct type and kind inference algorithms ;
     \item proofs of meta-properties ;
     \item operational semantics ;
-    \item . %% TODO Put something about strong normalization here.
+    \item an attempt at proving strong normalization. 
   \end{itemize}
 
 \end{frame}
@@ -339,6 +339,141 @@ Inductive insert_kind : nat -> kind -> env -> env -> Prop :=
 
 \end{frame}
 
+\section*{}
+
+\begin{frame}[fragile]
+\frametitle{Proving metatheoretical properties: extensionality}
+\begin{itemize}
+  \item Intuitive idea: many properties only depend on in-scope variables.
+  \item Example: \textbf{wf\_typ}.
+  \item Idea: any operations that preserve extensionality preserve these properties.
+\end{itemize}
+
+\begin{pyglist}[fontsize=\scriptsize]
+  Lemma kind_extensionality_wf_typ :
+    forall (T : typ) (e e' : env),
+      (forall p : nat, extends (get_kind e p) (get_kind e' p)) -> 
+      wf_typ e T -> wf_typ e' T.
+      
+  Lemma replace_kind_respects_kind_extensionality :
+    forall (e e' e'' : env) (K' K'' : kind) (pos : nat),
+      K'' <= K' ->
+      insert_kind pos K' e e' ->
+      insert_kind pos K'' e e'' ->
+      (forall (p : nat), extends (get_kind e' p) (get_kind e'' p)).
+\end{pyglist}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Term reduction}
+\begin{itemize}
+  \item Semantics given by an inductive predicate for reduction
+  \item Further predicates for reflexive and transitive closure
+  \item ...plus some nice syntax!
+\end{itemize}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Inductive reduction : term -> term -> Prop :=
+| beta_app T t t' :
+    reduction (app (abs T t) (t')) (subst t 0 t')
+...
+| congr_app_left t1 t1' t2 :
+    reduction t1 t1' ->
+    reduction (app t1 t2) (app t1' t2)
+...
+    
+Notation ``x ~> y'' := (reduction x y).
+Notation ``x ~>* y'' := (clos_refl_trans term reduction x y).
+\end{pyglist}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Turning Coq into a lambda-calculator}
+\begin{itemize}
+  \item Many proofs involving reduction are trivial and boring.
+  \item The programmer has to manually find the sequence of reductions.
+  \item A better solution? Brute force!
+\end{itemize}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Ltac one_step :=
+  simpl; (
+    eauto
+      || eapply beta_app
+      || eapply beta_app_t
+      || (((eapply congr_app_left)
+             || (eapply congr_app_right)
+             || (eapply congr_app_t)
+             || (eapply congr_abs)
+             || (eapply congr_abs_t)); one_step)
+  ).
+\end{pyglist}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Who said Coq isn't Turing-complete?}
+\begin{pyglist}[fontsize=\scriptsize]
+Ltac steps_unbound :=
+  simpl;
+  match goal with
+    | |- _ ~> _ => one_step
+    | |- _ ~>+ _ =>
+      (eapply t_step; one_step) 
+      || (eapply t_trans; [ (eauto || steps_unbound) .. ])
+    | |- _ ~>* _ =>
+      (eapply rt_step; one_step) || (eapply rt_refl) 
+      || (eapply rt_trans; [ (eauto || steps_unbound) .. ])
+  end.
+
+Ltac steps := timeout 2 steps_unbound.
+\end{pyglist}
+\begin{itemize}
+  \item Proving congruence theorems becomes trivial!
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normaland neutral terms}
+\begin{itemize}
+  \item Inductive predicates for normal and neutral terms
+  \item ...together with more brute force tactics!
+\end{itemize}
+
+\begin{pyglist}[fontsize=\scriptsize]
+Inductive normal : term -> Prop :=
+...
+with neutral : term -> Prop :=
+...
+
+Ltac neutralize :=
+  simpl;
+  (eauto
+     || match goal with
+          | |- neutral (var _) => 
+          (apply neutral_var)
+          | |- neutral (app_t _ _) => 
+          (apply neutral_app_t; neutralize)
+          | |- neutral (app _ _) => 
+          (apply neutral_app; [ neutralize | normalize ])
+        end)
+  with normalize := ...
+\end{pyglist}
+\end{frame}
+
+\section{Tips and tricks}
+
+\begin{frame}
+  \frametitle{Some useful tactics}
+  \begin{itemize}
+    \item Existential tactics: \textbf{eapply}, \textbf{eauto}, \textbf{erewrite}
+    \item Rewriting everywhere: \textbf{rewrite} H \textbf{in} *
+    \item Proving lemmas instantly: \textbf{assert} P \textbf{by} Tac
+    \item Parallel proving: \textbf{destruct} H; [ $Tac_1$ | $Tac_2$ \ldots ]
+    \item Helping auto: \textbf{auto using} H
+    \item Surviving failure: \textbf{try} Tac
+  \end{itemize}
+\end{frame}
 %% No section for the final slide
 \section*{}
 
